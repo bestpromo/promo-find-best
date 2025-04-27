@@ -15,11 +15,14 @@ export const useProducts = (searchQuery: string, sortBy: string) => {
         const searchTerms = searchQuery.trim().split(/\s+/);
         
         // Create conditions for each term to match either nome or loja_nome
-        const conditions = searchTerms.map(term => `
-          (nome ILIKE '%${term}%' OR loja_nome ILIKE '%${term}%')
-        `).join(' AND ');
-        
-        query = query.or(conditions);
+        if (searchTerms.length > 0) {
+          const filters = searchTerms.map(term => 
+            `nome.ilike.%${term}%,loja_nome.ilike.%${term}%`
+          );
+          
+          // Apply filters using Supabase's Filter API syntax
+          query = query.or(filters.join(','));
+        }
       }
 
       const { data, error } = await query;
