@@ -1,3 +1,4 @@
+
 import { SearchBar } from "@/components/SearchBar";
 import { ProductCard } from "@/components/ProductCard";
 import { SearchControls } from "@/components/SearchControls";
@@ -48,7 +49,7 @@ const SearchPage = () => {
     <div className="min-h-screen">
       <header className="border-b">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-8 mb-4">
+          <div className="flex items-center gap-8">
             <Link to="/">
               <img 
                 src="/lovable-uploads/5a8f2c7c-9460-4fbf-a4ab-7160fe6749d2.png" 
@@ -58,14 +59,17 @@ const SearchPage = () => {
             </Link>
             <SearchBar initialValue={query} className="flex-1" />
           </div>
-          <SearchControls 
-            onSortChange={setSortBy}
-            onDisplayModeChange={setDisplayMode}
-            displayMode={displayMode}
-          />
         </div>
       </header>
       
+      <div className="container mx-auto px-4 py-4 border-b">
+        <SearchControls 
+          onSortChange={setSortBy}
+          onDisplayModeChange={setDisplayMode}
+          displayMode={displayMode}
+        />
+      </div>
+
       <main className="container mx-auto px-4 py-8">
         <div className={`
           ${displayMode === 'grid' 
