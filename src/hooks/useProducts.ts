@@ -11,7 +11,15 @@ export const useProducts = (searchQuery: string, sortBy: string) => {
         .select("*");
 
       if (searchQuery) {
-        query = query.textSearch('search_text', searchQuery.trim());
+        // Split search query into individual terms
+        const searchTerms = searchQuery.trim().split(/\s+/);
+        
+        // Create conditions for each term to match either nome or loja_nome
+        const conditions = searchTerms.map(term => `
+          (nome ILIKE '%${term}%' OR loja_nome ILIKE '%${term}%')
+        `).join(' AND ');
+        
+        query = query.or(conditions);
       }
 
       const { data, error } = await query;

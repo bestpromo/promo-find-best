@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
@@ -44,7 +43,7 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
       </CardHeader>
       <CardContent className={`p-4 ${displayMode === 'list' ? 'flex-1' : ''}`}>
         <h3 className="font-semibold text-lg mb-2">{name}</h3>
-        <p className="text-orange-500 font-bold mb-2">${typeof price === 'number' ? price.toFixed(2) : price}</p>
+        <p className="text-orange-500 font-bold mb-2">${price}</p>
         <p className="text-gray-600 text-sm mb-4">{description}</p>
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500">{category}</span>
@@ -57,3 +56,5 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
     </Card>
   );
 };
+
+export default ProductCard;
