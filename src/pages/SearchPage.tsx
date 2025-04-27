@@ -1,4 +1,3 @@
-
 import { SearchBar } from "@/components/SearchBar";
 import { ProductCard } from "@/components/ProductCard";
 import { SearchControls } from "@/components/SearchControls";
@@ -7,7 +6,7 @@ import { useSearchParams, Link } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
-const PRODUCTS_PER_PAGE = 15;
+const PRODUCTS_PER_PAGE = 20;
 
 const SearchPage = () => {
   const [searchParams] = useSearchParams();
