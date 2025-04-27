@@ -1,5 +1,5 @@
 
-import { Search, LogIn } from "lucide-react";
+import { Search, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
@@ -34,8 +34,9 @@ export const SearchBar = ({ initialValue = "", className = "" }: SearchBarProps)
         className="text-gray-600 hover:text-orange-500 transition-colors"
         onClick={() => console.log('Login functionality will be implemented later')}
       >
-        <LogIn size={24} />
+        <User size={24} />
       </button>
     </form>
   );
 };
+
