@@ -2,10 +2,10 @@
 import { SearchBar } from "@/components/SearchBar";
 import { ProductCard } from "@/components/ProductCard";
 import { SearchControls } from "@/components/SearchControls";
-import { mockProducts } from "@/data/mockProducts";
 import { useSearchParams, Link } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useProducts } from "@/hooks/useProducts";
 
 const PRODUCTS_PER_PAGE = 20;
 
@@ -16,25 +16,20 @@ const SearchPage = () => {
   const [visibleProducts, setVisibleProducts] = useState(PRODUCTS_PER_PAGE);
   
   const query = searchParams.get("q") || "";
-
-  // Filter products based on search query
-  const filteredProducts = mockProducts.filter(product =>
-    product.name.toLowerCase().includes(query.toLowerCase()) ||
-    product.description.toLowerCase().includes(query.toLowerCase())
-  );
+  const { data: products = [], isLoading } = useProducts(query, sortBy);
 
   // Sort products based on selected sorting option
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
+  const sortedProducts = [...products].sort((a, b) => {
     switch (sortBy) {
       case 'price-desc':
-        return b.price - a.price;
+        return Number(b.price) - Number(a.price);
       case 'price-asc':
-        return a.price - b.price;
+        return Number(a.price) - Number(b.price);
       case 'name-desc':
-        return b.name.localeCompare(a.name);
+        return (b.nome || '').localeCompare(a.nome || '');
       case 'name-asc':
       default:
-        return a.name.localeCompare(b.name);
+        return (a.nome || '').localeCompare(b.nome || '');
     }
   });
 
@@ -71,37 +66,45 @@ const SearchPage = () => {
       </div>
 
       <main className="container mx-auto px-4 py-8">
-        <div className={`
-          ${displayMode === 'grid' 
-            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6' 
-            : 'flex flex-col gap-6'
-          }
-        `}>
-          {productsToShow.map((product) => (
-            <ProductCard 
-              key={product.id} 
-              product={product} 
-              displayMode={displayMode}
-            />
-          ))}
-        </div>
-        
-        {sortedProducts.length === 0 && (
+        {isLoading ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">No products found for "{query}"</p>
+            <p className="text-gray-500">Loading products...</p>
           </div>
-        )}
+        ) : (
+          <>
+            <div className={`
+              ${displayMode === 'grid' 
+                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6' 
+                : 'flex flex-col gap-6'
+              }
+            `}>
+              {productsToShow.map((product) => (
+                <ProductCard 
+                  key={product.id} 
+                  product={product} 
+                  displayMode={displayMode}
+                />
+              ))}
+            </div>
+            
+            {sortedProducts.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-gray-500">No products found for "{query}"</p>
+              </div>
+            )}
 
-        {hasMoreProducts && (
-          <div className="flex justify-center mt-8">
-            <Button 
-              onClick={handleLoadMore}
-              variant="outline"
-              className="hover:bg-orange-500 hover:text-white"
-            >
-              Load More Products
-            </Button>
-          </div>
+            {hasMoreProducts && (
+              <div className="flex justify-center mt-8">
+                <Button 
+                  onClick={handleLoadMore}
+                  variant="outline"
+                  className="hover:bg-orange-500 hover:text-white"
+                >
+                  Load More Products
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>
