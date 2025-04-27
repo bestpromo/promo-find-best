@@ -5,11 +5,15 @@ import { SearchControls } from "@/components/SearchControls";
 import { mockProducts } from "@/data/mockProducts";
 import { useSearchParams, Link } from "react-router-dom";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+
+const PRODUCTS_PER_PAGE = 15;
 
 const SearchPage = () => {
   const [searchParams] = useSearchParams();
   const [sortBy, setSortBy] = useState<string>('name-asc');
   const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
+  const [visibleProducts, setVisibleProducts] = useState(PRODUCTS_PER_PAGE);
   
   const query = searchParams.get("q") || "";
 
@@ -33,6 +37,13 @@ const SearchPage = () => {
         return a.name.localeCompare(b.name);
     }
   });
+
+  const handleLoadMore = () => {
+    setVisibleProducts(prev => prev + PRODUCTS_PER_PAGE);
+  };
+
+  const productsToShow = sortedProducts.slice(0, visibleProducts);
+  const hasMoreProducts = visibleProducts < sortedProducts.length;
 
   return (
     <div className="min-h-screen">
@@ -63,7 +74,7 @@ const SearchPage = () => {
             : 'flex flex-col gap-6'
           }
         `}>
-          {sortedProducts.map((product) => (
+          {productsToShow.map((product) => (
             <ProductCard 
               key={product.id} 
               product={product} 
@@ -71,9 +82,22 @@ const SearchPage = () => {
             />
           ))}
         </div>
+        
         {sortedProducts.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500">No products found for "{query}"</p>
+          </div>
+        )}
+
+        {hasMoreProducts && (
+          <div className="flex justify-center mt-8">
+            <Button 
+              onClick={handleLoadMore}
+              variant="outline"
+              className="hover:bg-orange-500 hover:text-white"
+            >
+              Load More Products
+            </Button>
           </div>
         )}
       </main>
