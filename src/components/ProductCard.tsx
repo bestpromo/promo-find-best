@@ -1,6 +1,7 @@
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, ExternalLink } from "lucide-react";
 import type { Product } from "@/data/mockProducts";
 import { Database } from "@/integrations/supabase/types";
 
@@ -14,7 +15,9 @@ interface ProductCardProps {
 
 export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
   const handleBuy = () => {
-    console.log('Buy clicked for product:', product.id);
+    if (product.url) {
+      window.open(product.url, '_blank', 'noopener,noreferrer');
+    }
   };
 
   // Determine if we're dealing with a mock product or a Supabase product
@@ -47,8 +50,12 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
         <p className="text-gray-600 text-sm mb-4">{description}</p>
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500">{category}</span>
-          <Button onClick={handleBuy} className="bg-green-500 hover:bg-green-600">
-            <ShoppingCart className="mr-2 h-4 w-4" />
+          <Button 
+            onClick={handleBuy} 
+            className="bg-green-500 hover:bg-green-600"
+            disabled={!product.url}
+          >
+            <ExternalLink className="mr-2 h-4 w-4" />
             Buy
           </Button>
         </div>
