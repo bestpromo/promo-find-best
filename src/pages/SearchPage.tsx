@@ -1,41 +1,77 @@
 
 import { SearchBar } from "@/components/SearchBar";
 import { ProductCard } from "@/components/ProductCard";
+import { SearchControls } from "@/components/SearchControls";
 import { mockProducts } from "@/data/mockProducts";
 import { useSearchParams, Link } from "react-router-dom";
+import { useState } from "react";
 
 const SearchPage = () => {
   const [searchParams] = useSearchParams();
+  const [sortBy, setSortBy] = useState<string>('name-asc');
+  const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
+  
   const query = searchParams.get("q") || "";
 
-  // Mock filtering based on search query
+  // Filter products based on search query
   const filteredProducts = mockProducts.filter(product =>
     product.name.toLowerCase().includes(query.toLowerCase()) ||
     product.description.toLowerCase().includes(query.toLowerCase())
   );
 
+  // Sort products based on selected sorting option
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    switch (sortBy) {
+      case 'price-desc':
+        return b.price - a.price;
+      case 'price-asc':
+        return a.price - b.price;
+      case 'name-desc':
+        return b.name.localeCompare(a.name);
+      case 'name-asc':
+      default:
+        return a.name.localeCompare(b.name);
+    }
+  });
+
   return (
     <div className="min-h-screen">
       <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-8">
-          <Link to="/">
-            <img 
-              src="/lovable-uploads/5a8f2c7c-9460-4fbf-a4ab-7160fe6749d2.png" 
-              alt="Bestpromo Logo" 
-              className="h-8"
-            />
-          </Link>
-          <SearchBar initialValue={query} className="flex-1" />
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center gap-8 mb-4">
+            <Link to="/">
+              <img 
+                src="/lovable-uploads/5a8f2c7c-9460-4fbf-a4ab-7160fe6749d2.png" 
+                alt="Bestpromo Logo" 
+                className="h-8"
+              />
+            </Link>
+            <SearchBar initialValue={query} className="flex-1" />
+          </div>
+          <SearchControls 
+            onSortChange={setSortBy}
+            onDisplayModeChange={setDisplayMode}
+            displayMode={displayMode}
+          />
         </div>
       </header>
       
       <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+        <div className={`
+          ${displayMode === 'grid' 
+            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
+            : 'flex flex-col gap-6'
+          }
+        `}>
+          {sortedProducts.map((product) => (
+            <ProductCard 
+              key={product.id} 
+              product={product} 
+              displayMode={displayMode}
+            />
           ))}
         </div>
-        {filteredProducts.length === 0 && (
+        {sortedProducts.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500">No products found for "{query}"</p>
           </div>
