@@ -1,7 +1,8 @@
 
-import { Search } from "lucide-react";
+import { Search, LogIn } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { SignInButton } from "@clerk/clerk-react";
 
 interface SearchBarProps {
   initialValue?: string;
@@ -18,8 +19,8 @@ export const SearchBar = ({ initialValue = "", className = "" }: SearchBarProps)
   };
 
   return (
-    <form onSubmit={handleSearch} className={`max-w-2xl w-full ${className}`}>
-      <div className="relative">
+    <form onSubmit={handleSearch} className={`max-w-2xl w-full flex items-center gap-4 ${className}`}>
+      <div className="relative flex-grow">
         <input
           type="text"
           value={searchQuery}
@@ -29,6 +30,14 @@ export const SearchBar = ({ initialValue = "", className = "" }: SearchBarProps)
         />
         <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
       </div>
+      <SignInButton>
+        <button 
+          type="button" 
+          className="text-gray-600 hover:text-orange-500 transition-colors"
+        >
+          <LogIn size={24} />
+        </button>
+      </SignInButton>
     </form>
   );
 };
