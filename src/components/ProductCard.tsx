@@ -3,13 +3,10 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, ExternalLink } from "lucide-react";
 import type { Product } from "@/data/mockProducts";
-import { Database } from "@/integrations/supabase/types";
-
-// Define a type for Supabase products
-export type SupabaseProduct = Database['public']['Tables']['products']['Row'];
+import { ProductView } from "@/hooks/useProducts";
 
 interface ProductCardProps {
-  product: Product | SupabaseProduct;
+  product: Product | ProductView;
   displayMode: 'grid' | 'list';
 }
 
@@ -25,7 +22,7 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
   
   // Extract the correct properties based on product type
   const name = isSupabaseProduct ? product.nome || 'Unnamed Product' : product.name;
-  const price = isSupabaseProduct ? product.price || '0.00' : product.price.toFixed(2);
+  const price = isSupabaseProduct ? product.price?.toFixed(2) || '0.00' : product.price.toFixed(2);
   const description = isSupabaseProduct ? `Product from ${product.loja_nome || 'Unknown'}` : product.description;
   const category = isSupabaseProduct ? product.loja_nome || 'Uncategorized' : product.category;
   const imageUrl = isSupabaseProduct ? product.photo || '/placeholder.svg' : product.image;

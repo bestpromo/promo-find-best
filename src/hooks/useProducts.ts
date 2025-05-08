@@ -2,13 +2,25 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+// Define a type for our products view
+export type ProductView = {
+  id: number;
+  nome: string;
+  description: string | null;
+  url: string | null;
+  photo: string | null;
+  price: number | null;
+  loja_nome: string | null;
+};
+
 export const useProducts = (searchQuery: string, sortBy: string) => {
   return useQuery({
     queryKey: ["products", searchQuery, sortBy],
     queryFn: async () => {
+      // Using .from('products') with the name of our view
       let query = supabase
-        .from("products")
-        .select("*");
+        .from('products')
+        .select('*');
 
       if (searchQuery) {
         // Split search query into individual terms
@@ -32,7 +44,7 @@ export const useProducts = (searchQuery: string, sortBy: string) => {
         throw error;
       }
 
-      return data || [];
+      return data as ProductView[] || [];
     }
   });
 };

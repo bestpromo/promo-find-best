@@ -166,6 +166,13 @@ export type Database = {
             foreignKeyName: "stores_products_media_id_product_fkey"
             columns: ["id_product"]
             isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stores_products_media_id_product_fkey"
+            columns: ["id_product"]
+            isOneToOne: false
             referencedRelation: "stores_products"
             referencedColumns: ["id"]
           },
@@ -197,6 +204,13 @@ export type Database = {
           price?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "stores_products_price_id_product_fkey"
+            columns: ["id_product"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "stores_products_price_id_product_fkey"
             columns: ["id_product"]
@@ -496,10 +510,52 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      products: {
+        Row: {
+          description: string | null
+          id: number | null
+          loja_nome: string | null
+          nome: string | null
+          photo: string | null
+          price: number | null
+          url: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      gtrgm_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_decompress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_in: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_options: {
+        Args: { "": unknown }
+        Returns: undefined
+      }
+      gtrgm_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      set_limit: {
+        Args: { "": number }
+        Returns: number
+      }
+      show_limit: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      show_trgm: {
+        Args: { "": string }
+        Returns: string[]
+      }
     }
     Enums: {
       [_ in never]: never

@@ -5,7 +5,7 @@ import { SearchControls } from "@/components/SearchControls";
 import { useSearchParams, Link } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useProducts } from "@/hooks/useProducts";
+import { useProducts, ProductView } from "@/hooks/useProducts";
 
 const PRODUCTS_PER_PAGE = 20;
 
@@ -20,16 +20,19 @@ const SearchPage = () => {
 
   // Sort products based on selected sorting option
   const sortedProducts = [...products].sort((a, b) => {
+    const productA = a as ProductView;
+    const productB = b as ProductView;
+    
     switch (sortBy) {
       case 'price-desc':
-        return Number(b.price) - Number(a.price);
+        return (productB.price || 0) - (productA.price || 0);
       case 'price-asc':
-        return Number(a.price) - Number(b.price);
+        return (productA.price || 0) - (productB.price || 0);
       case 'name-desc':
-        return (b.nome || '').localeCompare(a.nome || '');
+        return (productB.nome || '').localeCompare(productA.nome || '');
       case 'name-asc':
       default:
-        return (a.nome || '').localeCompare(b.nome || '');
+        return (productA.nome || '').localeCompare(productB.nome || '');
     }
   });
 
