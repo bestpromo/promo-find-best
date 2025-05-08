@@ -16,6 +16,7 @@ const HomePage = () => {
       
       <div className="w-full mt-16 text-center flex flex-col items-center justify-center">
         <h2 className="text-2xl font-bold mb-4">+ 100 lojas parceiras</h2>
+        <br />
         <div className="w-full flex justify-center">
           <StoresCarousel />
         </div>
