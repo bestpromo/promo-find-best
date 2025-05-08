@@ -26,7 +26,7 @@ const storeLogos = [
   "/lovable-uploads/af342ac9-fffd-427a-baac-b92bb269f896.png", // Comfy
   "/lovable-uploads/d9fe34e2-cb8d-4daf-98ae-0a72774e6412.png", // Consul
   
-  // Newly uploaded images
+  // Second batch of images
   "/lovable-uploads/5a7850a7-abe8-4b50-817c-ce47e4cf096d.png", // Continental
   "/lovable-uploads/acb2a395-1fcd-4d2c-837c-a545a4d1dce3.png", // Dafiti
   "/lovable-uploads/a25fc40f-02a6-442c-9c3d-50a283292cc3.png", // Decathlon
@@ -47,6 +47,28 @@ const storeLogos = [
   "/lovable-uploads/43f77d97-1636-4fe5-9853-e78a726d226e.png", // Grand Cru
   "/lovable-uploads/646c7b0e-8241-4066-aabf-f64511cff297.png", // Highstil
   "/lovable-uploads/a5112307-23fa-4d69-a1ce-5b195584346b.png", // Hiper Varejo
+  
+  // Third batch of images
+  "/lovable-uploads/8ffc70e3-71cf-4330-b75d-e99db56458eb.png", // Iguatemi 365
+  "/lovable-uploads/68e0eb54-053c-485c-ba24-11a072d22106.png", // Intimissimi
+  "/lovable-uploads/7cb3060b-efc7-43ee-a6bb-53d22c71a125.png", // iPlace
+  "/lovable-uploads/e45864f8-34fe-4f46-a137-40c209d725b5.png", // KaBuM
+  "/lovable-uploads/04135679-626b-4d0c-8b3d-7b4448c92d3a.png", // Kipling
+  "/lovable-uploads/d5c4c38b-2ed3-4fd5-b098-e6341e349f1a.png", // KitchenAid
+  "/lovable-uploads/e6984a3b-aa62-425a-a622-f1e776f8f9a7.png", // Le Biscuit
+  "/lovable-uploads/8647b7ee-2ff1-4733-8fb3-ec4c5c22aa5c.png", // LEGO
+  "/lovable-uploads/04b5bcd2-451f-436a-b26b-bf0c72bb7fb4.png", // Leroy Merlin
+  "/lovable-uploads/d291178f-82de-4f23-8630-7e1a95b63686.png", // LG
+  "/lovable-uploads/822400fb-225a-4db2-881b-0bcd77b7cc65.png", // LocaWeb
+  "/lovable-uploads/ccb6d93a-d2b4-4908-a374-9cd2376d6fb5.png", // L'Occitane
+  "/lovable-uploads/a08ac726-dbbc-42ba-9ea4-9dc566d13e2a.png", // MAC
+  "/lovable-uploads/4e1bf931-9006-4ab1-9d77-b71bae0a7212.png", // Madeira Madeira
+  "/lovable-uploads/9fe46244-6c6b-434e-8567-5dbd46d2a3c3.png", // Martins
+  "/lovable-uploads/e9e7b6bd-927b-437a-837b-a8765aaa3dad.png", // Mizuno
+  "/lovable-uploads/11a021c7-8ef2-47a3-85f6-7a6d14af9231.png", // Mobly
+  "/lovable-uploads/2745ec7c-6399-4359-aa72-b86bd8dbda91.png", // Natura
+  "/lovable-uploads/77e372b4-7170-466b-bc2a-303565c0c7bc.png", // Nespresso
+  "/lovable-uploads/640af075-017b-452b-a298-464a5f96d3a2.png", // Nike
 ];
 
 // Function to shuffle array using Fisher-Yates algorithm
