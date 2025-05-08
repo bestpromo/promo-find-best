@@ -100,13 +100,13 @@ const shuffleArray = (array: any[]) => {
   return shuffledArray;
 };
 
-// Create four rows of randomly shuffled logos without repetition
+// Create three rows of randomly shuffled logos without repetition
 const createStoreRows = () => {
   const shuffled = shuffleArray([...storeLogos]);
   const totalLogos = shuffled.length;
   
-  // Distribute logos evenly among 4 rows without repetition
-  const itemsPerRow = Math.ceil(totalLogos / 4);
+  // Distribute logos evenly among 3 rows without repetition
+  const itemsPerRow = Math.ceil(totalLogos / 3);
   
   return [
     shuffled.slice(0, itemsPerRow).map((src, idx) => ({ 
@@ -119,15 +119,10 @@ const createStoreRows = () => {
       src, 
       alt: `Store Logo ${itemsPerRow + idx + 1}` 
     })),
-    shuffled.slice(itemsPerRow * 2, itemsPerRow * 3).map((src, idx) => ({ 
+    shuffled.slice(itemsPerRow * 2).map((src, idx) => ({ 
       id: `store-3-${idx}`, 
       src, 
       alt: `Store Logo ${itemsPerRow * 2 + idx + 1}` 
-    })),
-    shuffled.slice(itemsPerRow * 3).map((src, idx) => ({ 
-      id: `store-4-${idx}`, 
-      src, 
-      alt: `Store Logo ${itemsPerRow * 3 + idx + 1}` 
     }))
   ];
 };
@@ -175,16 +170,6 @@ export function StoresCarousel() {
               carouselElements[2].scrollLeft = 0;
             }
           }
-        }, 30),
-        
-        setInterval(() => {
-          if (carouselElements[3]) {
-            carouselElements[3].scrollLeft -= 1;
-            // Reset position when reached the start
-            if (carouselElements[3].scrollLeft <= 10) {
-              carouselElements[3].scrollLeft = carouselElements[3].scrollWidth - carouselElements[3].clientWidth;
-            }
-          }
         }, 30)
       );
     }
@@ -223,7 +208,7 @@ export function StoresCarousel() {
                 <img 
                   src={logo.src} 
                   alt={logo.alt}
-                  className={`min-w-[80px] w-[80px] h-auto object-contain transition-all duration-300
+                  className={`min-w-[100px] w-[100px] h-auto object-contain transition-all duration-300
                     ${hoveredLogo === logo.id || isMobile ? '' : 'grayscale'}`}
                 />
               </div>
