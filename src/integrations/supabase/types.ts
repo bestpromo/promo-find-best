@@ -9,39 +9,488 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      products: {
+      partner_marketplace: {
         Row: {
-          created_at: string | null
+          amazon_access_key: string | null
+          amazon_partner_tag: string | null
+          amazon_secret_key: string | null
+          awin_publisher_id: string | null
+          created_at: string
           id: number
-          loja_logo_url: string | null
-          loja_nome: string | null
+          logo: string | null
           nome: string | null
-          photo: string | null
-          price: string | null
-          search_text: unknown | null
-          url: string | null
+          shopee_appid: string | null
+          shopee_senha_api: string | null
         }
         Insert: {
-          created_at?: string | null
-          id: number
-          loja_logo_url?: string | null
-          loja_nome?: string | null
+          amazon_access_key?: string | null
+          amazon_partner_tag?: string | null
+          amazon_secret_key?: string | null
+          awin_publisher_id?: string | null
+          created_at?: string
+          id?: number
+          logo?: string | null
           nome?: string | null
-          photo?: string | null
-          price?: string | null
-          search_text?: unknown | null
-          url?: string | null
+          shopee_appid?: string | null
+          shopee_senha_api?: string | null
         }
         Update: {
-          created_at?: string | null
+          amazon_access_key?: string | null
+          amazon_partner_tag?: string | null
+          amazon_secret_key?: string | null
+          awin_publisher_id?: string | null
+          created_at?: string
           id?: number
-          loja_logo_url?: string | null
-          loja_nome?: string | null
+          logo?: string | null
           nome?: string | null
-          photo?: string | null
-          price?: string | null
-          search_text?: unknown | null
+          shopee_appid?: string | null
+          shopee_senha_api?: string | null
+        }
+        Relationships: []
+      }
+      stores: {
+        Row: {
+          created_at: string
+          id: number
+          id_partner_marketplace: number
+          id_store_in_marketplace: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          id_partner_marketplace: number
+          id_store_in_marketplace: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          id_partner_marketplace?: number
+          id_store_in_marketplace?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stores_id_partner_marketplace_fkey"
+            columns: ["id_partner_marketplace"]
+            isOneToOne: false
+            referencedRelation: "partner_marketplace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stores_products: {
+        Row: {
+          barcode: number | null
+          created_at: string
+          description: string | null
+          ean: string | null
+          gtin: string | null
+          id: number
+          id_store: number
+          merchant_product_id: string
+          name_product: string
+          sku: string
+          status: boolean
+          stock: number | null
+          thumbnail: string
+          url: string | null
+          url_tracked: string
+        }
+        Insert: {
+          barcode?: number | null
+          created_at?: string
+          description?: string | null
+          ean?: string | null
+          gtin?: string | null
+          id?: number
+          id_store: number
+          merchant_product_id: string
+          name_product: string
+          sku: string
+          status: boolean
+          stock?: number | null
+          thumbnail: string
           url?: string | null
+          url_tracked: string
+        }
+        Update: {
+          barcode?: number | null
+          created_at?: string
+          description?: string | null
+          ean?: string | null
+          gtin?: string | null
+          id?: number
+          id_store?: number
+          merchant_product_id?: string
+          name_product?: string
+          sku?: string
+          status?: boolean
+          stock?: number | null
+          thumbnail?: string
+          url?: string | null
+          url_tracked?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stores_products_id_store_fkey"
+            columns: ["id_store"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stores_products_media: {
+        Row: {
+          created_at: string
+          id: number
+          id_product: number
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          id_product: number
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          id_product?: number
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stores_products_media_id_product_fkey"
+            columns: ["id_product"]
+            isOneToOne: false
+            referencedRelation: "stores_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stores_products_price: {
+        Row: {
+          base_price: number | null
+          created_at: string
+          id: number
+          id_product: number
+          original_price: number | null
+          price: number
+        }
+        Insert: {
+          base_price?: number | null
+          created_at?: string
+          id?: number
+          id_product: number
+          original_price?: number | null
+          price: number
+        }
+        Update: {
+          base_price?: number | null
+          created_at?: string
+          id?: number
+          id_product?: number
+          original_price?: number | null
+          price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stores_products_price_id_product_fkey"
+            columns: ["id_product"]
+            isOneToOne: false
+            referencedRelation: "stores_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      temp_import_catalog_awin: {
+        Row: {
+          alternate_image: string | null
+          alternate_image_four: string | null
+          alternate_image_three: string | null
+          alternate_image_two: string | null
+          average_rating: string | null
+          aw_deep_link: string | null
+          aw_image_url: string | null
+          aw_product_id: string | null
+          aw_thumb_url: string | null
+          base_price: string | null
+          base_price_amount: string | null
+          base_price_text: string | null
+          basket_link: string | null
+          brand_id: string | null
+          brand_name: string | null
+          category_id: string | null
+          category_name: string | null
+          colour: string | null
+          commission_group: string | null
+          condition: string | null
+          currency: string | null
+          custom_1: string | null
+          custom_2: string | null
+          custom_3: string | null
+          custom_4: string | null
+          custom_5: string | null
+          custom_6: string | null
+          custom_7: string | null
+          custom_8: string | null
+          custom_9: string | null
+          data_feed_id: string | null
+          delivery_cost: string | null
+          delivery_restrictions: string | null
+          delivery_time: string | null
+          delivery_weight: string | null
+          description: string | null
+          dimensions: string | null
+          display_price: string | null
+          ean: string | null
+          fashion_category: string | null
+          fashion_material: string | null
+          fashion_pattern: string | null
+          fashion_size: string | null
+          fashion_suitable_for: string | null
+          fashion_swatch: string | null
+          id: number
+          in_stock: string | null
+          is_for_sale: string | null
+          isbn: string | null
+          keywords: string | null
+          language: string | null
+          large_image: string | null
+          last_updated: string | null
+          merchant_category: string | null
+          merchant_deep_link: string | null
+          merchant_id: string | null
+          merchant_image_url: string | null
+          merchant_name: string | null
+          merchant_product_category_path: string | null
+          merchant_product_id: string | null
+          merchant_product_second_category: string | null
+          merchant_product_third_category: string | null
+          merchant_thumb_url: string | null
+          model_number: string | null
+          mpn: string | null
+          number_available: string | null
+          parent_product_id: string | null
+          pre_order: string | null
+          product_gtin: string | null
+          product_model: string | null
+          product_name: string | null
+          product_price_old: string | null
+          product_short_description: string | null
+          product_type: string | null
+          promotional_text: string | null
+          rating: string | null
+          reviews: string | null
+          rrp_price: string | null
+          saving: string | null
+          savings_percent: string | null
+          search_price: string | null
+          size_stock_amount: string | null
+          size_stock_status: string | null
+          specifications: string | null
+          stock_quantity: string | null
+          stock_status: string | null
+          store_price: string | null
+          terms_of_contract: string | null
+          upc: string | null
+          valid_from: string | null
+          valid_to: string | null
+          warranty: string | null
+          web_offer: string | null
+        }
+        Insert: {
+          alternate_image?: string | null
+          alternate_image_four?: string | null
+          alternate_image_three?: string | null
+          alternate_image_two?: string | null
+          average_rating?: string | null
+          aw_deep_link?: string | null
+          aw_image_url?: string | null
+          aw_product_id?: string | null
+          aw_thumb_url?: string | null
+          base_price?: string | null
+          base_price_amount?: string | null
+          base_price_text?: string | null
+          basket_link?: string | null
+          brand_id?: string | null
+          brand_name?: string | null
+          category_id?: string | null
+          category_name?: string | null
+          colour?: string | null
+          commission_group?: string | null
+          condition?: string | null
+          currency?: string | null
+          custom_1?: string | null
+          custom_2?: string | null
+          custom_3?: string | null
+          custom_4?: string | null
+          custom_5?: string | null
+          custom_6?: string | null
+          custom_7?: string | null
+          custom_8?: string | null
+          custom_9?: string | null
+          data_feed_id?: string | null
+          delivery_cost?: string | null
+          delivery_restrictions?: string | null
+          delivery_time?: string | null
+          delivery_weight?: string | null
+          description?: string | null
+          dimensions?: string | null
+          display_price?: string | null
+          ean?: string | null
+          fashion_category?: string | null
+          fashion_material?: string | null
+          fashion_pattern?: string | null
+          fashion_size?: string | null
+          fashion_suitable_for?: string | null
+          fashion_swatch?: string | null
+          id?: number
+          in_stock?: string | null
+          is_for_sale?: string | null
+          isbn?: string | null
+          keywords?: string | null
+          language?: string | null
+          large_image?: string | null
+          last_updated?: string | null
+          merchant_category?: string | null
+          merchant_deep_link?: string | null
+          merchant_id?: string | null
+          merchant_image_url?: string | null
+          merchant_name?: string | null
+          merchant_product_category_path?: string | null
+          merchant_product_id?: string | null
+          merchant_product_second_category?: string | null
+          merchant_product_third_category?: string | null
+          merchant_thumb_url?: string | null
+          model_number?: string | null
+          mpn?: string | null
+          number_available?: string | null
+          parent_product_id?: string | null
+          pre_order?: string | null
+          product_gtin?: string | null
+          product_model?: string | null
+          product_name?: string | null
+          product_price_old?: string | null
+          product_short_description?: string | null
+          product_type?: string | null
+          promotional_text?: string | null
+          rating?: string | null
+          reviews?: string | null
+          rrp_price?: string | null
+          saving?: string | null
+          savings_percent?: string | null
+          search_price?: string | null
+          size_stock_amount?: string | null
+          size_stock_status?: string | null
+          specifications?: string | null
+          stock_quantity?: string | null
+          stock_status?: string | null
+          store_price?: string | null
+          terms_of_contract?: string | null
+          upc?: string | null
+          valid_from?: string | null
+          valid_to?: string | null
+          warranty?: string | null
+          web_offer?: string | null
+        }
+        Update: {
+          alternate_image?: string | null
+          alternate_image_four?: string | null
+          alternate_image_three?: string | null
+          alternate_image_two?: string | null
+          average_rating?: string | null
+          aw_deep_link?: string | null
+          aw_image_url?: string | null
+          aw_product_id?: string | null
+          aw_thumb_url?: string | null
+          base_price?: string | null
+          base_price_amount?: string | null
+          base_price_text?: string | null
+          basket_link?: string | null
+          brand_id?: string | null
+          brand_name?: string | null
+          category_id?: string | null
+          category_name?: string | null
+          colour?: string | null
+          commission_group?: string | null
+          condition?: string | null
+          currency?: string | null
+          custom_1?: string | null
+          custom_2?: string | null
+          custom_3?: string | null
+          custom_4?: string | null
+          custom_5?: string | null
+          custom_6?: string | null
+          custom_7?: string | null
+          custom_8?: string | null
+          custom_9?: string | null
+          data_feed_id?: string | null
+          delivery_cost?: string | null
+          delivery_restrictions?: string | null
+          delivery_time?: string | null
+          delivery_weight?: string | null
+          description?: string | null
+          dimensions?: string | null
+          display_price?: string | null
+          ean?: string | null
+          fashion_category?: string | null
+          fashion_material?: string | null
+          fashion_pattern?: string | null
+          fashion_size?: string | null
+          fashion_suitable_for?: string | null
+          fashion_swatch?: string | null
+          id?: number
+          in_stock?: string | null
+          is_for_sale?: string | null
+          isbn?: string | null
+          keywords?: string | null
+          language?: string | null
+          large_image?: string | null
+          last_updated?: string | null
+          merchant_category?: string | null
+          merchant_deep_link?: string | null
+          merchant_id?: string | null
+          merchant_image_url?: string | null
+          merchant_name?: string | null
+          merchant_product_category_path?: string | null
+          merchant_product_id?: string | null
+          merchant_product_second_category?: string | null
+          merchant_product_third_category?: string | null
+          merchant_thumb_url?: string | null
+          model_number?: string | null
+          mpn?: string | null
+          number_available?: string | null
+          parent_product_id?: string | null
+          pre_order?: string | null
+          product_gtin?: string | null
+          product_model?: string | null
+          product_name?: string | null
+          product_price_old?: string | null
+          product_short_description?: string | null
+          product_type?: string | null
+          promotional_text?: string | null
+          rating?: string | null
+          reviews?: string | null
+          rrp_price?: string | null
+          saving?: string | null
+          savings_percent?: string | null
+          search_price?: string | null
+          size_stock_amount?: string | null
+          size_stock_status?: string | null
+          specifications?: string | null
+          stock_quantity?: string | null
+          stock_status?: string | null
+          store_price?: string | null
+          terms_of_contract?: string | null
+          upc?: string | null
+          valid_from?: string | null
+          valid_to?: string | null
+          warranty?: string | null
+          web_offer?: string | null
         }
         Relationships: []
       }
