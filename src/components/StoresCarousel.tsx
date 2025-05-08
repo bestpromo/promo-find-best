@@ -1,53 +1,72 @@
 
 import React, { useRef, useEffect, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { 
-  Carousel,
-  CarouselContent, 
-  CarouselItem 
-} from "@/components/ui/carousel";
 
-// Store logos for each row
+// Store logos array with all the uploaded images
 const storeLogos = [
-  // Row 1 - Slides left
-  [
-    { id: "amazon", src: "https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?w=200&h=100&fit=crop", alt: "Amazon" },
-    { id: "walmart", src: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200&h=100&fit=crop", alt: "Walmart" },
-    { id: "target", src: "https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=200&h=100&fit=crop", alt: "Target" },
-    { id: "bestbuy", src: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=200&h=100&fit=crop", alt: "Best Buy" },
-    { id: "apple", src: "https://images.unsplash.com/photo-1491933382434-500287f9b54b?w=200&h=100&fit=crop", alt: "Apple" },
-    { id: "nike", src: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200&h=100&fit=crop", alt: "Nike" },
-    { id: "adidas", src: "https://images.unsplash.com/photo-1560243563-062bfc001d68?w=200&h=100&fit=crop", alt: "Adidas" },
-    { id: "ikea", src: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=200&h=100&fit=crop", alt: "Ikea" },
-  ],
-  // Row 2 - Slides right
-  [
-    { id: "samsung", src: "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=200&h=100&fit=crop", alt: "Samsung" },
-    { id: "sony", src: "https://images.unsplash.com/photo-1606041008023-472dfb5e530f?w=200&h=100&fit=crop", alt: "Sony" },
-    { id: "dell", src: "https://images.unsplash.com/photo-1593642532400-2682810df593?w=200&h=100&fit=crop", alt: "Dell" },
-    { id: "hp", src: "https://images.unsplash.com/photo-1551419762-4a3d998f6292?w=200&h=100&fit=crop", alt: "HP" },
-    { id: "asus", src: "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=200&h=100&fit=crop", alt: "Asus" },
-    { id: "lenovo", src: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=200&h=100&fit=crop", alt: "Lenovo" },
-    { id: "microsoft", src: "https://images.unsplash.com/photo-1496171367470-9ed9a91ea931?w=200&h=100&fit=crop", alt: "Microsoft" },
-    { id: "intel", src: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=200&h=100&fit=crop", alt: "Intel" },
-  ],
-  // Row 3 - Slides left
-  [
-    { id: "lg", src: "https://images.unsplash.com/photo-1517420879524-86d64ac2f339?w=200&h=100&fit=crop", alt: "LG" },
-    { id: "philips", src: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=200&h=100&fit=crop", alt: "Philips" },
-    { id: "canon", src: "https://images.unsplash.com/photo-1526661934280-676cef25bc9b?w=200&h=100&fit=crop", alt: "Canon" },
-    { id: "nikon", src: "https://images.unsplash.com/photo-1617462197268-9c690cccd9bc?w=200&h=100&fit=crop", alt: "Nikon" },
-    { id: "gopro", src: "https://images.unsplash.com/photo-1542567455-cd733f23fbb1?w=200&h=100&fit=crop", alt: "GoPro" },
-    { id: "netflix", src: "https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=200&h=100&fit=crop", alt: "Netflix" },
-    { id: "spotify", src: "https://images.unsplash.com/photo-1611339555312-e607c8352fd7?w=200&h=100&fit=crop", alt: "Spotify" },
-    { id: "disney", src: "https://images.unsplash.com/photo-1616469829941-c7200edec809?w=200&h=100&fit=crop", alt: "Disney" },
-  ]
+  "/lovable-uploads/6617a7c5-8074-4111-8a1d-aa1db000076b.png", // Acer
+  "/lovable-uploads/c3ce27e8-0152-41ec-8250-ffc78e99779f.png", // Adcos
+  "/lovable-uploads/fa4c58e9-54da-4ada-8bd8-6c0d1b0e767e.png", // Adidas
+  "/lovable-uploads/e69f710b-ef71-4630-9f8e-2f108562ae56.png", // AliExpress
+  "/lovable-uploads/afcfb7ab-4ae6-4c9d-b99c-9b988624a2e8.png", // Animale
+  "/lovable-uploads/a2153cbf-d2b2-4198-936a-3cd06d44b655.png", // Awx
+  "/lovable-uploads/0ad9287e-72b1-4f3b-af64-8c69767bbf7d.png", // Beleza na Web
+  "/lovable-uploads/1669f39a-ddcb-449b-baf8-64d803e3be0c.png", // Booking.com
+  "/lovable-uploads/4499b5a1-1991-4158-bfef-8690c512b56b.png", // LOR
+  "/lovable-uploads/44784ed5-8d74-4fc7-a5ec-3239a7fae604.png", // Carraro
+  "/lovable-uploads/947563d4-8a41-487f-b680-1b7ece78c05b.png", // Cobasi
+  "/lovable-uploads/ab2d00a5-1bc7-4107-a527-1b9930e9061d.png", // Consul
+  "/lovable-uploads/5af05afa-ee11-402e-9dea-74fd9ffc5b4e.png", // Dafiti
+  "/lovable-uploads/62672d52-976f-4b99-8403-08b4e0a14810.png", // Diesel
+  "/lovable-uploads/b64ae7f5-9c74-4af1-8d5f-b7adbf1b2ddb.png", // Dolce Gusto
+  "/lovable-uploads/a28cbe0d-2635-4480-8bc3-6ee5a50df577.png", // Drogasil
+  "/lovable-uploads/e76698c3-e135-4fcf-9e18-2641ece94788.png", // Drogaria Venancio
+  "/lovable-uploads/856de304-c334-447d-9ba9-4052db8e3c8c.png", // Eudora
+  "/lovable-uploads/9c747782-2032-4ec0-be00-5d1234653e1a.png", // Fast Shop
+  "/lovable-uploads/e8e5703b-f09c-46ee-a56b-f647884928aa.png", // GOL
 ];
+
+// Function to shuffle array using Fisher-Yates algorithm
+const shuffleArray = (array: any[]) => {
+  const shuffledArray = [...array];
+  for (let i = shuffledArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
+  }
+  return shuffledArray;
+};
+
+// Create three rows of randomly shuffled logos
+const createStoreRows = () => {
+  const shuffled = shuffleArray(storeLogos);
+  
+  // Distribute logos evenly among 3 rows
+  const itemsPerRow = Math.ceil(shuffled.length / 3);
+  
+  return [
+    shuffled.slice(0, itemsPerRow).map((src, idx) => ({ 
+      id: `store-1-${idx}`, 
+      src, 
+      alt: `Store Logo ${idx + 1}` 
+    })),
+    shuffled.slice(itemsPerRow, itemsPerRow * 2).map((src, idx) => ({ 
+      id: `store-2-${idx}`, 
+      src, 
+      alt: `Store Logo ${itemsPerRow + idx + 1}` 
+    })),
+    shuffled.slice(itemsPerRow * 2).map((src, idx) => ({ 
+      id: `store-3-${idx}`, 
+      src, 
+      alt: `Store Logo ${itemsPerRow * 2 + idx + 1}` 
+    }))
+  ];
+};
 
 export function StoresCarousel() {
   const carouselRefs = useRef<HTMLDivElement[]>([]);
   const [hoveredLogo, setHoveredLogo] = useState<string | null>(null);
   const isMobile = useIsMobile();
+  const [storeRows] = useState(() => createStoreRows());
   
   // Set up autoplay functionality
   useEffect(() => {
@@ -97,7 +116,7 @@ export function StoresCarousel() {
   
   return (
     <div className="w-full space-y-10">
-      {storeLogos.map((row, rowIndex) => (
+      {storeRows.map((row, rowIndex) => (
         <div 
           key={rowIndex} 
           className="overflow-hidden"
