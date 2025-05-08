@@ -228,7 +228,7 @@ export function StoresCarousel() {
   }, [hoveredLogo, isMobile]);
   
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-4">
       {storeRows.map((row, rowIndex) => (
         <div 
           key={rowIndex} 
@@ -238,8 +238,12 @@ export function StoresCarousel() {
             ref={el => {
               if (el) carouselRefs.current[rowIndex] = el;
             }}
-            className="flex gap-8 overflow-x-hidden whitespace-nowrap w-full"
-            style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)' }}
+            className="flex gap-6 overflow-x-hidden whitespace-nowrap w-full"
+            style={{ 
+              width: '100vw', 
+              marginLeft: 'calc(-50vw + 50%)',
+              padding: '0 1rem'
+            }}
           >
             {/* Display each logo just once, no repetition */}
             {row.map((logo) => (
@@ -252,7 +256,7 @@ export function StoresCarousel() {
                 <img 
                   src={logo.src} 
                   alt={logo.alt}
-                  className={`w-[100px] h-auto object-contain transition-all duration-300
+                  className={`min-w-[80px] w-[80px] h-auto object-contain transition-all duration-300
                     ${hoveredLogo === logo.id || isMobile ? '' : 'grayscale'}`}
                 />
               </div>
