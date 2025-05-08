@@ -4,7 +4,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 // Store logos array with all uploaded images
 const storeLogos = [
-  // Previously uploaded images
+  // Previously uploaded images from batches 1-3
   "/lovable-uploads/88dcc6fd-8166-4c85-b6b2-58f17723e690.png", // Acer
   "/lovable-uploads/7d7bb335-0caf-4291-8ef2-979104c2a6c6.png", // Adcos
   "/lovable-uploads/28224410-0554-4383-a887-32b08d97eb8f.png", // Adidas
@@ -69,6 +69,26 @@ const storeLogos = [
   "/lovable-uploads/2745ec7c-6399-4359-aa72-b86bd8dbda91.png", // Natura
   "/lovable-uploads/77e372b4-7170-466b-bc2a-303565c0c7bc.png", // Nespresso
   "/lovable-uploads/640af075-017b-452b-a298-464a5f96d3a2.png", // Nike
+  
+  // Fourth batch of newly uploaded images
+  "/lovable-uploads/f889bbff-3a76-45f3-a61d-c0f86d9324b9.png", // O Boticário
+  "/lovable-uploads/20eac3e6-f6ae-4447-a11f-b9074b65e5a0.png", // Pague Menos
+  "/lovable-uploads/33a3afb7-903d-4fee-9145-bf4700b9f983.png", // Olympikus
+  "/lovable-uploads/262d5e8d-332a-42f5-bdd0-16e388b9cab6.png", // Polishop
+  "/lovable-uploads/8c592c65-94f9-43bb-beaf-21beb2f0aeb2.png", // Reserva
+  "/lovable-uploads/5bdb84af-9522-40f5-954d-a611a3530354.png", // Schutz
+  "/lovable-uploads/8bdcc61d-207f-4294-bd40-8f497b9b1c49.png", // Sestini
+  "/lovable-uploads/ddc04248-c2c3-4829-bedc-606c5e4d001f.png", // Shark
+  "/lovable-uploads/860d2738-b66e-4fea-a41f-9cbea5da1019.png", // Spicy
+  "/lovable-uploads/9d61deba-d876-4c0e-830b-96a40c2b5a42.png", // Stanley
+  "/lovable-uploads/07964a8b-68ab-4d79-8cab-d4e3e19c7636.png", // Lojas taQi
+  "/lovable-uploads/40133e68-c044-49dd-a665-b270d7dcd732.png", // Telha Norte
+  "/lovable-uploads/a6993aa4-2391-4409-ae53-ada759185a30.png", // Tok&Stok
+  "/lovable-uploads/f8bcb855-bd71-4b24-8c32-92573a744b34.png", // Under Armour
+  "/lovable-uploads/b3dd5830-8b0e-4feb-9444-11d35d60ec71.png", // Web Continental
+  "/lovable-uploads/714f77bd-73ba-40e4-a4e4-eb1daa257841.png", // Web Fones
+  "/lovable-uploads/16d7e1e0-cfa1-4d8e-9d27-99f652be1165.png", // Wine
+  "/lovable-uploads/d34b9123-54ae-412e-884f-c3a2e28fee90.png", // ZZ Mall
 ];
 
 // Function to shuffle array using Fisher-Yates algorithm
