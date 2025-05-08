@@ -2,8 +2,9 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-// Store logos array with just the newly uploaded images
+// Store logos array with all uploaded images
 const storeLogos = [
+  // Previously uploaded images
   "/lovable-uploads/88dcc6fd-8166-4c85-b6b2-58f17723e690.png", // Acer
   "/lovable-uploads/7d7bb335-0caf-4291-8ef2-979104c2a6c6.png", // Adcos
   "/lovable-uploads/28224410-0554-4383-a887-32b08d97eb8f.png", // Adidas
@@ -24,6 +25,28 @@ const storeLogos = [
   "/lovable-uploads/948a426f-f5c1-4b22-94e2-e2a7e2af9e2e.png", // Cobasi
   "/lovable-uploads/af342ac9-fffd-427a-baac-b92bb269f896.png", // Comfy
   "/lovable-uploads/d9fe34e2-cb8d-4daf-98ae-0a72774e6412.png", // Consul
+  
+  // Newly uploaded images
+  "/lovable-uploads/5a7850a7-abe8-4b50-817c-ce47e4cf096d.png", // Continental
+  "/lovable-uploads/acb2a395-1fcd-4d2c-837c-a545a4d1dce3.png", // Dafiti
+  "/lovable-uploads/a25fc40f-02a6-442c-9c3d-50a283292cc3.png", // Decathlon
+  "/lovable-uploads/16f22aa7-3e94-465f-8050-cfd933865b79.png", // Diesel
+  "/lovable-uploads/e4d1eb29-a096-49ec-89d2-18f38eb82cbd.png", // Dolce Gusto
+  "/lovable-uploads/e47c9291-8203-473f-8204-79443b064b98.png", // Drogal
+  "/lovable-uploads/486826f7-545c-4646-8b49-980587ad776d.png", // Drogasil
+  "/lovable-uploads/ce517950-3c20-4f3d-8330-86ca6ea1e560.png", // Drogaria Venancio
+  "/lovable-uploads/55c32105-8a79-4676-bc0e-b9d4ea195f96.png", // eFacil
+  "/lovable-uploads/5faaaff3-4a94-4f38-a90e-a4941c3ca8b3.png", // Electrolux
+  "/lovable-uploads/e5efeaf0-138c-4c21-af4c-13bd194298d6.png", // Eudora
+  "/lovable-uploads/20872afd-1bca-4e25-9e96-67f21f7e7382.png", // Extra
+  "/lovable-uploads/141c0038-5c08-4c13-8fbc-283738814dc6.png", // Extrafarma
+  "/lovable-uploads/5a7f1f50-55f3-47da-9d30-3be37ccc5ef1.png", // FastShop
+  "/lovable-uploads/e66693ae-0a1f-4a83-a800-d377fc216b64.png", // Gama Italy
+  "/lovable-uploads/110910e5-18ca-4ae7-a2cc-7182af209aa9.png", // Gocase
+  "/lovable-uploads/3d687675-8d7a-4dbc-9ac6-9e9477f4aedd.png", // GOL
+  "/lovable-uploads/43f77d97-1636-4fe5-9853-e78a726d226e.png", // Grand Cru
+  "/lovable-uploads/646c7b0e-8241-4066-aabf-f64511cff297.png", // Highstil
+  "/lovable-uploads/a5112307-23fa-4d69-a1ce-5b195584346b.png", // Hiper Varejo
 ];
 
 // Function to shuffle array using Fisher-Yates algorithm
