@@ -14,9 +14,11 @@ const HomePage = () => {
       </div>
       <SearchBar className="w-full max-w-2xl" />
       
-      <div className="w-full mt-16 text-center overflow-hidden">
+      <div className="w-full mt-16 text-center flex flex-col items-center justify-center">
         <h2 className="text-2xl font-bold mb-4">+ 100 lojas parceiras</h2>
-        <StoresCarousel />
+        <div className="w-full flex justify-center">
+          <StoresCarousel />
+        </div>
       </div>
     </div>
   );

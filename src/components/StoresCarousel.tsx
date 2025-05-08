@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -101,13 +100,13 @@ const shuffleArray = (array: any[]) => {
   return shuffledArray;
 };
 
-// Create six rows of randomly shuffled logos without repetition
+// Create four rows of randomly shuffled logos without repetition
 const createStoreRows = () => {
   const shuffled = shuffleArray([...storeLogos]);
   const totalLogos = shuffled.length;
   
-  // Distribute logos evenly among 6 rows without repetition
-  const itemsPerRow = Math.ceil(totalLogos / 6);
+  // Distribute logos evenly among 4 rows without repetition
+  const itemsPerRow = Math.ceil(totalLogos / 4);
   
   return [
     shuffled.slice(0, itemsPerRow).map((src, idx) => ({ 
@@ -125,21 +124,10 @@ const createStoreRows = () => {
       src, 
       alt: `Store Logo ${itemsPerRow * 2 + idx + 1}` 
     })),
-    // Adding three more rows
-    shuffled.slice(itemsPerRow * 3, itemsPerRow * 4).map((src, idx) => ({ 
+    shuffled.slice(itemsPerRow * 3).map((src, idx) => ({ 
       id: `store-4-${idx}`, 
       src, 
       alt: `Store Logo ${itemsPerRow * 3 + idx + 1}` 
-    })),
-    shuffled.slice(itemsPerRow * 4, itemsPerRow * 5).map((src, idx) => ({ 
-      id: `store-5-${idx}`, 
-      src, 
-      alt: `Store Logo ${itemsPerRow * 4 + idx + 1}` 
-    })),
-    shuffled.slice(itemsPerRow * 5).map((src, idx) => ({ 
-      id: `store-6-${idx}`, 
-      src, 
-      alt: `Store Logo ${itemsPerRow * 5 + idx + 1}` 
     }))
   ];
 };
@@ -189,33 +177,12 @@ export function StoresCarousel() {
           }
         }, 30),
         
-        // Adding intervals for the new rows
         setInterval(() => {
           if (carouselElements[3]) {
             carouselElements[3].scrollLeft -= 1;
             // Reset position when reached the start
             if (carouselElements[3].scrollLeft <= 10) {
               carouselElements[3].scrollLeft = carouselElements[3].scrollWidth - carouselElements[3].clientWidth;
-            }
-          }
-        }, 30),
-        
-        setInterval(() => {
-          if (carouselElements[4]) {
-            carouselElements[4].scrollLeft += 1;
-            // Reset position when reached the end
-            if (carouselElements[4].scrollLeft >= carouselElements[4].scrollWidth - carouselElements[4].clientWidth - 10) {
-              carouselElements[4].scrollLeft = 0;
-            }
-          }
-        }, 30),
-        
-        setInterval(() => {
-          if (carouselElements[5]) {
-            carouselElements[5].scrollLeft -= 1;
-            // Reset position when reached the start
-            if (carouselElements[5].scrollLeft <= 10) {
-              carouselElements[5].scrollLeft = carouselElements[5].scrollWidth - carouselElements[5].clientWidth;
             }
           }
         }, 30)
@@ -228,7 +195,7 @@ export function StoresCarousel() {
   }, [hoveredLogo, isMobile]);
   
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-4 max-w-screen-xl mx-auto">
       {storeRows.map((row, rowIndex) => (
         <div 
           key={rowIndex} 
