@@ -1,9 +1,18 @@
-
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, ExternalLink } from "lucide-react";
-import type { Product } from "@/data/mockProducts";
 import { ProductView } from "@/hooks/useProducts";
+
+// Update the Product type to include the url property
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  image: string;
+  url: string; // Add url property
+}
 
 interface ProductCardProps {
   product: Product | ProductView;

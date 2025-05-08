@@ -1,5 +1,6 @@
 
 import { SearchBar } from "@/components/SearchBar";
+import { StoresCarousel } from "@/components/StoresCarousel";
 
 const HomePage = () => {
   return (
@@ -12,6 +13,11 @@ const HomePage = () => {
         />
       </div>
       <SearchBar className="w-full max-w-2xl" />
+      
+      <div className="w-full max-w-6xl mt-16 text-center">
+        <h2 className="text-2xl font-bold mb-8">+ 100 lojas parceiras</h2>
+        <StoresCarousel />
+      </div>
     </div>
   );
 };
