@@ -59,12 +59,13 @@ const shuffleArray = (array: any[]) => {
   return shuffledArray;
 };
 
-// Create three rows of randomly shuffled logos
+// Create three rows of randomly shuffled logos without repetition
 const createStoreRows = () => {
-  const shuffled = shuffleArray(storeLogos);
+  const shuffled = shuffleArray([...storeLogos]);
+  const totalLogos = shuffled.length;
   
-  // Distribute logos evenly among 3 rows
-  const itemsPerRow = Math.ceil(shuffled.length / 3);
+  // Distribute logos evenly among 3 rows without repetition
+  const itemsPerRow = Math.ceil(totalLogos / 3);
   
   return [
     shuffled.slice(0, itemsPerRow).map((src, idx) => ({ 
@@ -142,18 +143,18 @@ export function StoresCarousel() {
       {storeRows.map((row, rowIndex) => (
         <div 
           key={rowIndex} 
-          className="overflow-hidden"
+          className="overflow-hidden w-full"
         >
           <div 
             ref={el => {
               if (el) carouselRefs.current[rowIndex] = el;
             }}
-            className="flex gap-8 overflow-x-hidden whitespace-nowrap"
+            className="flex gap-8 overflow-x-hidden whitespace-nowrap w-full"
           >
-            {/* Duplicate the logos to create an infinite effect */}
-            {[...row, ...row].map((logo, logoIndex) => (
+            {/* Display each logo just once, no repetition */}
+            {row.map((logo) => (
               <div 
-                key={`${logo.id}-${logoIndex}`}
+                key={logo.id}
                 className="inline-block"
                 onMouseEnter={() => !isMobile && setHoveredLogo(logo.id)}
                 onMouseLeave={() => !isMobile && setHoveredLogo(null)}
