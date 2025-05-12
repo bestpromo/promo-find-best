@@ -4,7 +4,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 // Store logos array with all uploaded images
 const storeLogos = [
   // Previously uploaded images from batches 1-3
-  "/lovable-uploads/amazon.png", // Amazon
   "/lovable-uploads/acer.png", // Acer
   "/lovable-uploads/adcos.png", // Adcos
   "/lovable-uploads/adidas.png", // Adidas
@@ -32,6 +31,7 @@ const storeLogos = [
   "/lovable-uploads/dafiti.png", // Dafiti
   "/lovable-uploads/decathlon.png", // Decathlon
   "/lovable-uploads/diesel.png", // Diesel
+  "/lovable-uploads/amazon.png", // Amazon
   "/lovable-uploads/dolcegusto.png", // Dolce Gusto
   "/lovable-uploads/drogal.png", // Drogal
   "/lovable-uploads/drogasil.png", // Drogasil
