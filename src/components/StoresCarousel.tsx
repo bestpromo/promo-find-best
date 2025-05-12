@@ -83,9 +83,13 @@ const storeLogos = [
   { name: "Web Continental", img_url: "/lovable-uploads/webcontinental.png", url: "https://tidd.ly/43qT9Xd" },
   { name: "Web Fones", img_url: "/lovable-uploads/webfones.png", url: "https://tidd.ly/3H3ZtLv" },
   { name: "Wine", img_url: "/lovable-uploads/wine.png", url: "https://tidd.ly/3SxFJ5y" },
-  { name: "ZZ Mall", img_url: "/lovable-uploads/zzmall.png", url: "https://tidd.ly/3EQVwJH" }
+  { name: "ZZ Mall", img_url: "/lovable-uploads/zzmall.png", url: "https://tidd.ly/3EQVwJH" },
+  { name: "Mevo Farma", img_url: "/lovable-uploads/mevo-farma.png", url: "https://tidd.ly/3ZfsdXX" },
+  { name: "Asics", img_url: "/lovable-uploads/asicis.png", url: "https://tidd.ly/4meaLgy" },
+  { name: "Compra Direta - Empresas", img_url: "/lovable-uploads/compra-direta.png", url: "https://tidd.ly/3F08u7Y" },
+  { name: "Ninja BR", img_url: "/lovable-uploads/ninja.png", url: "https://tidd.ly/43redgg" },
+  { name: "Puma", img_url: "/lovable-uploads/puma.png", url: "https://tidd.ly/4kgnFsD" }
 ];
-
 
 // Function to shuffle array using Fisher-Yates algorithm
 const shuffleArray = (array: any[]) => {
