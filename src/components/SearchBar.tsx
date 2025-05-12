@@ -24,12 +24,12 @@ export const SearchBar = ({ initialValue = "", className = "" }: SearchBarProps)
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search for the best promotions..."
+          placeholder="Buscar as melhores promoções e produtos"
           className="w-full px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:border-orange-500 pl-12"
         />
         <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
       </div>
-      {/*
+      {/* botao de login na home
       <button 
         type="button" 
         className="text-gray-600 hover:text-orange-500 transition-colors"
