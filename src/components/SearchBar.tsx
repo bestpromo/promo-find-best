@@ -29,13 +29,14 @@ export const SearchBar = ({ initialValue = "", className = "" }: SearchBarProps)
         />
         <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
       </div>
+      {/*
       <button 
         type="button" 
         className="text-gray-600 hover:text-orange-500 transition-colors"
         onClick={() => console.log('Login functionality will be implemented later')}
       >
         <User size={24} />
-      </button>
+      </button> */}
     </form>
   );
 };
