@@ -15,7 +15,7 @@ const HomePage = () => {
       <SearchBar className="w-full max-w-2xl" />
       
       <div className="w-full mt-16 text-center flex flex-col items-center justify-center">
-        <h2 className="text-2xl font-bold mb-4" style={{ color: "#FE6030" }}>+ 100 lojas parceiras</h2>
+        <h2 className="text-2xl font-bold mb-4" style={{ color: "#FE6030" }}>+ 100 lojas parceiras e seguras</h2>
         <br />
         <div className="w-full flex justify-center">
           <StoresCarousel />
