@@ -44,7 +44,12 @@ export const StoreFilter = ({
   console.log('orderedStores length:', orderedStores.length);
 
   return (
-    <FilterSection title="Parceiros" selectedCount={selectedStores.length} className="h-48">
+    <FilterSection 
+      title="Parceiros" 
+      selectedCount={selectedStores.length} 
+      showCount={selectedStores.length > 0}
+      className="h-48"
+    >
       {orderedStores.length > 0 ? (
         orderedStores.map((store) => {
           const isSelected = selectedStores.includes(store);
