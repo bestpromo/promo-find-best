@@ -67,19 +67,19 @@ export const useProducts = (
         const realTotalCount = totalCountResult.count || 0;
         console.log('REAL total count for search term:', realTotalCount);
 
-        // 2. Get available filters based on search term only (using limited query for performance)
+        // 2. Get available filters based on search term only (limited to 500 for performance)
         console.log('Getting available filters for search results...');
-        let allFiltersQuery = supabase.from('offer_search').select('brand_name, store_name, sale_price').limit(10000);
+        let allFiltersQuery = supabase.from('offer_search').select('brand_name, store_name, sale_price').limit(500);
         allFiltersQuery = applySearchFilter(allFiltersQuery);
 
         const allFiltersResult = await allFiltersQuery;
         const { availableBrands: allBrands, availableStores: allStores } = extractUniqueFilters(allFiltersResult.data || []);
 
-        // 3. Get filtered brands based on selected stores
+        // 3. Get filtered brands based on selected stores (limited to 500 for performance)
         console.log('Getting filtered brands based on selected stores...');
         let filteredBrands = allBrands;
         if (storeFilter && storeFilter.length > 0) {
-          let brandFilterQuery = supabase.from('offer_search').select('brand_name').limit(10000);
+          let brandFilterQuery = supabase.from('offer_search').select('brand_name').limit(500);
           brandFilterQuery = applySearchFilter(brandFilterQuery);
           brandFilterQuery = brandFilterQuery.in('store_name', storeFilter);
           
