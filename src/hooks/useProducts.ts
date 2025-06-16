@@ -29,20 +29,18 @@ export const useProducts = (
           storeFilter
         };
 
-        // Create queries
+        // Create queries with shorter timeout approach
         const dataQuery = createDataQuery(filters);
         const filtersQuery = createFiltersQuery(filters);
 
-        console.log('Executing simplified queries...');
+        console.log('Executing optimized queries...');
         
-        // Execute queries with shorter timeout
-        const [{ data, error }, { data: filtersData, error: filtersError }] = await Promise.all([
-          dataQuery,
-          filtersQuery
-        ]);
+        // Execute data query first with timeout handling
+        const { data, error } = await dataQuery;
 
         if (error) {
           console.error("Error fetching data:", error);
+          // Return empty results but don't throw
           return { 
             products: [], 
             totalCount: 0, 
@@ -52,17 +50,24 @@ export const useProducts = (
           };
         }
 
-        if (filtersError) {
-          console.warn("Error fetching filters:", filtersError);
-        }
+        console.log('Data query successful, length:', data?.length || 0);
 
-        console.log('Query results:', { dataLength: data?.length, filtersDataLength: filtersData?.length });
+        // Try to get filters data, but don't fail if it times out
+        let filtersData = null;
+        try {
+          const filtersResult = await filtersQuery;
+          if (!filtersResult.error) {
+            filtersData = filtersResult.data;
+          }
+        } catch (filtersError) {
+          console.warn("Filters query failed, continuing without filters:", filtersError);
+        }
 
         // Transform the data
         const products: ProductView[] = (data || []).map(transformProductData);
 
-        // Extract unique brands and stores
-        const { availableBrands, availableStores } = extractUniqueFilters(filtersData);
+        // Extract unique brands and stores (use data as fallback if filtersData failed)
+        const { availableBrands, availableStores } = extractUniqueFilters(filtersData || data);
 
         // Simple pagination logic
         const hasMore = products.length === pageSize;
@@ -86,8 +91,8 @@ export const useProducts = (
           availableStores 
         };
 
-      } catch (fallbackError) {
-        console.error("Error in products query:", fallbackError);
+      } catch (error) {
+        console.error("Error in products query:", error);
         return { 
           products: [], 
           totalCount: 0, 
@@ -98,8 +103,8 @@ export const useProducts = (
       }
     },
     staleTime: 5 * 60 * 1000,
-    retry: 1,
-    retryDelay: 1000,
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 };
 

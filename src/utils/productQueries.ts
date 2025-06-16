@@ -6,11 +6,11 @@ export const createBaseQuery = (filters: ProductFilters) => {
   const { searchQuery, brandFilter, storeFilter, priceRange } = filters;
   let query = supabase.from('offer_search').select('*');
   
-  // Simplified search - only use exact matches to avoid timeouts
+  // Use simple exact match for search terms to avoid timeouts
   if (searchQuery && searchQuery.trim()) {
     const searchTerm = searchQuery.trim().toLowerCase();
-    // Use simple exact match first, then simple contains
-    query = query.or(`title.ilike.*${searchTerm}*,brand_name.ilike.*${searchTerm}*`);
+    // Try exact match first, then simple contains without wildcards
+    query = query.or(`title.ilike.%${searchTerm}%,brand_name.eq.${searchTerm}`);
   }
 
   // Apply filters
@@ -58,40 +58,22 @@ export const createDataQuery = (filters: ProductFilters) => {
   return dataQuery;
 };
 
-export const createCountQuery = (filters: ProductFilters) => {
-  const { searchQuery, brandFilter, storeFilter, priceRange } = filters;
-  let countQuery = supabase.from('offer_search').select('*', { count: 'exact', head: true });
-  
-  // Apply the same simplified search
-  if (searchQuery && searchQuery.trim()) {
-    const searchTerm = searchQuery.trim().toLowerCase();
-    countQuery = countQuery.or(`title.ilike.*${searchTerm}*,brand_name.ilike.*${searchTerm}*`);
-  }
-
-  if (brandFilter && brandFilter.length > 0) {
-    countQuery = countQuery.in('brand_name', brandFilter);
-  }
-
-  if (storeFilter && storeFilter.length > 0) {
-    countQuery = countQuery.in('store_name', storeFilter);
-  }
-
-  if (priceRange && (priceRange.min > 0 || priceRange.max < 1000)) {
-    countQuery = countQuery.gte('sale_price', priceRange.min).lte('sale_price', priceRange.max);
-  }
-
-  return countQuery;
-};
-
+// Simplified query for getting available filters
 export const createFiltersQuery = (filters: ProductFilters) => {
   const { searchQuery } = filters;
-  let filtersQuery = supabase.from('offer_search').select('brand_name, store_name');
   
-  // Apply simplified search for filters
-  if (searchQuery && searchQuery.trim()) {
-    const searchTerm = searchQuery.trim().toLowerCase();
-    filtersQuery = filtersQuery.or(`title.ilike.*${searchTerm}*,brand_name.ilike.*${searchTerm}*`);
+  // If no search query, get all brands and stores (limited)
+  if (!searchQuery || !searchQuery.trim()) {
+    return supabase
+      .from('offer_search')
+      .select('brand_name, store_name')
+      .limit(1000); // Limit to avoid timeout
   }
-
-  return filtersQuery;
+  
+  const searchTerm = searchQuery.trim().toLowerCase();
+  return supabase
+    .from('offer_search')
+    .select('brand_name, store_name')
+    .or(`title.ilike.%${searchTerm}%,brand_name.eq.${searchTerm}`)
+    .limit(500); // Smaller limit for search results
 };
