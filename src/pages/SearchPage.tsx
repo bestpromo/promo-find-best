@@ -4,119 +4,176 @@ import { ProductCard } from "@/components/ProductCard";
 import { SearchControls } from "@/components/SearchControls";
 import { FilterSidebar } from "@/components/FilterSidebar";
 import { MobileFilters } from "@/components/MobileFilters";
+import { 
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { useSearchParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { useProducts, ProductView, applyFilters } from "@/hooks/useProducts";
+import { useProducts } from "@/hooks/useProducts";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
 const PRODUCTS_PER_PAGE = 50;
 
 const SearchPage = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [sortBy, setSortBy] = useState<string>('nome-asc');
   const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
-  const [visibleProducts, setVisibleProducts] = useState(PRODUCTS_PER_PAGE);
+  const [currentPage, setCurrentPage] = useState(1);
   const [brandFilter, setBrandFilter] = useState<string[]>([]);
   const [storeFilter, setStoreFilter] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 1000 });
   
   const query = searchParams.get("q") || "";
-  const { data, isLoading } = useProducts(query, sortBy);
+  const { data, isLoading } = useProducts(
+    query, 
+    sortBy, 
+    currentPage, 
+    PRODUCTS_PER_PAGE, 
+    brandFilter, 
+    priceRange, 
+    storeFilter
+  );
   const isMobile = useIsMobile();
   
-  const allProducts = data?.allProducts || [];
+  const products = data?.products || [];
+  const totalCount = data?.totalCount || 0;
+  const hasMore = data?.hasMore || false;
   const availableBrands = data?.availableBrands || [];
   const availableStores = data?.availableStores || [];
 
-  // Apply filters client-side
-  const filteredProducts = applyFilters(allProducts, brandFilter, priceRange, storeFilter);
+  // Calculate pagination info
+  const totalPages = Math.ceil(totalCount / PRODUCTS_PER_PAGE);
+  const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE + 1;
+  const endIndex = Math.min(currentPage * PRODUCTS_PER_PAGE, totalCount);
 
   // Calculate active filters count for mobile
   const activeFiltersCount = brandFilter.length + storeFilter.length +
     (priceRange.min > 0 || priceRange.max < 1000 ? 1 : 0);
 
-  // Reset filters when search query changes
+  // Reset filters and pagination when search query changes
   useEffect(() => {
     setBrandFilter([]);
     setStoreFilter([]);
     setPriceRange({ min: 0, max: 1000 });
-    setVisibleProducts(PRODUCTS_PER_PAGE);
+    setCurrentPage(1);
   }, [query]);
 
-  // Helper function to check if product has image
-  const hasValidImage = (product: ProductView) => {
-    const isSupabaseProduct = 'offer_id' in product;
-    const imageUrl = isSupabaseProduct ? product.image_url : (product as any).image;
-    
-    // Consider image invalid if it's empty, null, undefined, or placeholder
-    return imageUrl && 
-           imageUrl !== '/placeholder.svg' && 
-           imageUrl.trim() !== '' &&
-           imageUrl !== 'placeholder.svg';
-  };
-
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    const productA = a as ProductView;
-    const productB = b as ProductView;
-    
-    // First, sort by image availability (products with images first)
-    const aHasImage = hasValidImage(productA);
-    const bHasImage = hasValidImage(productB);
-    
-    if (aHasImage && !bHasImage) return -1; // A has image, B doesn't - A comes first
-    if (!aHasImage && bHasImage) return 1;  // B has image, A doesn't - B comes first
-    
-    // If both have images or both don't have images, sort by the selected criterion
-    switch (sortBy) {
-      case 'price-desc':
-        return (productB.sale_price || 0) - (productA.sale_price || 0);
-      case 'price-asc':
-        return (productA.sale_price || 0) - (productB.sale_price || 0);
-      case 'nome-desc':
-        return (productB.title || '').localeCompare(productA.title || '');
-      case 'nome-asc':
-      default:
-        return (productA.title || '').localeCompare(productB.title || '');
-    }
-  });
-
-  const handleLoadMore = () => {
-    setVisibleProducts(prev => prev + PRODUCTS_PER_PAGE);
-  };
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [brandFilter, storeFilter, priceRange, sortBy]);
 
   const handleClearFilters = () => {
     setBrandFilter([]);
     setStoreFilter([]);
     setPriceRange({ min: 0, max: 1000 });
-    setVisibleProducts(PRODUCTS_PER_PAGE);
+    setCurrentPage(1);
   };
 
   const handleBrandFilterChange = (brands: string[]) => {
     setBrandFilter(brands);
-    setVisibleProducts(PRODUCTS_PER_PAGE); // Reset pagination when filter changes
   };
 
   const handleStoreFilterChange = (stores: string[]) => {
     setStoreFilter(stores);
-    setVisibleProducts(PRODUCTS_PER_PAGE); // Reset pagination when filter changes
   };
 
   const handlePriceRangeChange = (range: { min: number; max: number }) => {
     setPriceRange(range);
-    setVisibleProducts(PRODUCTS_PER_PAGE); // Reset pagination when filter changes
   };
 
-  const productsToShow = sortedProducts.slice(0, visibleProducts);
-  const hasMoreProducts = visibleProducts < sortedProducts.length;
+  // Generate pagination items
+  const generatePaginationItems = () => {
+    const items = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      // Show all pages if total is small
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink
+              onClick={() => setCurrentPage(i)}
+              isActive={currentPage === i}
+              className="cursor-pointer"
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      // Show pages with ellipsis
+      items.push(
+        <PaginationItem key={1}>
+          <PaginationLink
+            onClick={() => setCurrentPage(1)}
+            isActive={currentPage === 1}
+            className="cursor-pointer"
+          >
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
 
-  // Use infinite scroll hook for mobile
-  const { isLoading: isLoadingMore } = useInfiniteScroll({
-    hasMore: hasMoreProducts,
-    onLoadMore: handleLoadMore,
-    threshold: 200
-  });
+      if (currentPage > 3) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+
+      for (let i = start; i <= end; i++) {
+        if (i !== 1 && i !== totalPages) {
+          items.push(
+            <PaginationItem key={i}>
+              <PaginationLink
+                onClick={() => setCurrentPage(i)}
+                isActive={currentPage === i}
+                className="cursor-pointer"
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 2) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages}>
+            <PaginationLink
+              onClick={() => setCurrentPage(totalPages)}
+              isActive={currentPage === totalPages}
+              className="cursor-pointer"
+            >
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
 
   return (
     <div className="min-h-screen">
@@ -150,7 +207,7 @@ const SearchPage = () => {
             availableBrands={availableBrands}
             availableStores={availableStores}
             searchQuery={query}
-            allProducts={allProducts}
+            allProducts={products}
             activeFiltersCount={activeFiltersCount}
             selectedBrands={brandFilter}
             selectedStores={storeFilter}
@@ -183,7 +240,7 @@ const SearchPage = () => {
               availableBrands={availableBrands}
               availableStores={availableStores}
               searchQuery={query}
-              allProducts={allProducts}
+              allProducts={products}
               selectedBrands={brandFilter}
               selectedStores={storeFilter}
               priceRange={priceRange}
@@ -200,7 +257,8 @@ const SearchPage = () => {
               <>
                 <div className="mb-4">
                   <p className="text-sm text-gray-600">
-                    {sortedProducts.length} produtos encontrados
+                    {totalCount} produtos encontrados
+                    {totalCount > 0 && ` • Mostrando ${startIndex}-${endIndex}`}
                     {brandFilter.length > 0 && ` • Marcas: ${brandFilter.join(', ')}`}
                     {storeFilter.length > 0 && ` • Lojas: ${storeFilter.join(', ')}`}
                     {(priceRange.min > 0 || priceRange.max < 1000) && 
@@ -215,7 +273,7 @@ const SearchPage = () => {
                     : 'flex flex-col gap-6'
                   }
                 `}>
-                  {productsToShow.map((product) => (
+                  {products.map((product) => (
                     <ProductCard 
                       key={product.id} 
                       product={product} 
@@ -224,29 +282,34 @@ const SearchPage = () => {
                   ))}
                 </div>
                 
-                {sortedProducts.length === 0 && (
+                {products.length === 0 && (
                   <div className="text-center py-12">
                     <p className="text-gray-500">Nenhum produto encontrado para "{query}"</p>
                   </div>
                 )}
 
-                {/* Show loading indicator on mobile during infinite scroll */}
-                {isMobile && isLoadingMore && (
-                  <div className="text-center py-4">
-                    <p className="text-gray-500">Carregando mais produtos...</p>
-                  </div>
-                )}
-
-                {/* Show load more button only on desktop/tablet */}
-                {!isMobile && hasMoreProducts && (
+                {/* Pagination */}
+                {totalPages > 1 && (
                   <div className="flex justify-center mt-8">
-                    <Button 
-                      onClick={handleLoadMore}
-                      variant="outline"
-                      className="hover:bg-orange-500 hover:text-white"
-                    >
-                      Carregar Mais Produtos ({Math.min(PRODUCTS_PER_PAGE, sortedProducts.length - visibleProducts)} restantes)
-                    </Button>
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                            className={`cursor-pointer ${currentPage === 1 ? 'pointer-events-none opacity-50' : ''}`}
+                          />
+                        </PaginationItem>
+                        
+                        {generatePaginationItems()}
+                        
+                        <PaginationItem>
+                          <PaginationNext 
+                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                            className={`cursor-pointer ${currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}`}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
                   </div>
                 )}
               </>
