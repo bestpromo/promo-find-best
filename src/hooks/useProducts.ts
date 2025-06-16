@@ -35,14 +35,54 @@ export const useProducts = (
 
         console.log('Executing data and filters queries...');
         
-        // Execute data and filters queries
+        // Execute data and filters queries with timeout handling
         const [{ data, error }, { data: filtersData, error: filtersError }] = await Promise.all([
-          dataQuery,
-          filtersQuery
+          dataQuery.abortSignal(AbortSignal.timeout(10000)), // 10 second timeout
+          filtersQuery.abortSignal(AbortSignal.timeout(5000))  // 5 second timeout for filters
         ]);
 
         if (error) {
           console.error("Error fetching data:", error);
+          // If it's a timeout, try a simpler query
+          if (error.code === '57014') {
+            console.log('Query timed out, trying simpler approach...');
+            
+            // Fallback to simpler query without complex search
+            const simpleQuery = createDataQuery({
+              ...filters,
+              searchQuery: '' // Remove search to avoid timeout
+            });
+            
+            const { data: fallbackData, error: fallbackError } = await simpleQuery;
+            
+            if (fallbackError) {
+              return { 
+                products: [], 
+                totalCount: 0, 
+                hasMore: false, 
+                availableBrands: [], 
+                availableStores: [] 
+              };
+            }
+            
+            // Filter results client-side for now
+            const filteredData = searchQuery ? 
+              (fallbackData || []).filter(item => 
+                item.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                item.brand_name?.toLowerCase().includes(searchQuery.toLowerCase())
+              ) : (fallbackData || []);
+              
+            const products: ProductView[] = filteredData.map(transformProductData);
+            
+            return { 
+              products: products.slice(0, pageSize), 
+              totalCount: filteredData.length, 
+              hasMore: filteredData.length > pageSize, 
+              availableBrands: [...new Set(filteredData.map(p => p.brand_name).filter(Boolean))], 
+              availableStores: [...new Set(filteredData.map(p => p.store_name).filter(Boolean))] 
+            };
+          }
+          
           return { 
             products: [], 
             totalCount: 0, 
@@ -112,7 +152,11 @@ export const useProducts = (
     // Keep data fresh for 5 minutes to avoid unnecessary refetches
     staleTime: 5 * 60 * 1000,
     // Add retry logic for failed queries
-    retry: 2,
+    retry: (failureCount, error: any) => {
+      // Don't retry timeout errors
+      if (error?.code === '57014') return false;
+      return failureCount < 2;
+    },
     retryDelay: 1000,
   });
 };

@@ -6,12 +6,13 @@ export const createBaseQuery = (filters: ProductFilters) => {
   const { searchQuery, brandFilter, storeFilter, priceRange } = filters;
   let query = supabase.from('offer_search').select('*');
   
-  // Apply search filter - use simpler ilike pattern for better performance
+  // Apply search filter - use more efficient search strategies
   if (searchQuery) {
-    const searchTerm = searchQuery.trim();
+    const searchTerm = searchQuery.trim().toLowerCase();
     if (searchTerm) {
-      // Use single ilike instead of multiple or conditions for better performance
-      query = query.ilike('title', `%${searchTerm}%`);
+      // Try exact match first, then prefix match for better performance
+      // Avoid double wildcards which are very slow
+      query = query.or(`title.ilike.${searchTerm}*,title.ilike.*${searchTerm},brand_name.ilike.${searchTerm}*`);
     }
   }
 
@@ -64,11 +65,11 @@ export const createCountQuery = (filters: ProductFilters) => {
   const { searchQuery, brandFilter, storeFilter, priceRange } = filters;
   let countQuery = supabase.from('offer_search').select('*', { count: 'exact', head: true });
   
-  // Apply the same filters to count query - use simpler search pattern
+  // Apply the same optimized search filters
   if (searchQuery) {
-    const searchTerm = searchQuery.trim();
+    const searchTerm = searchQuery.trim().toLowerCase();
     if (searchTerm) {
-      countQuery = countQuery.ilike('title', `%${searchTerm}%`);
+      countQuery = countQuery.or(`title.ilike.${searchTerm}*,title.ilike.*${searchTerm},brand_name.ilike.${searchTerm}*`);
     }
   }
 
@@ -91,11 +92,11 @@ export const createFiltersQuery = (filters: ProductFilters) => {
   const { searchQuery } = filters;
   let filtersQuery = supabase.from('offer_search').select('brand_name, store_name');
   
-  // Only apply search filter to filters query - use simpler search pattern
+  // Apply optimized search filter for filters query
   if (searchQuery) {
-    const searchTerm = searchQuery.trim();
+    const searchTerm = searchQuery.trim().toLowerCase();
     if (searchTerm) {
-      filtersQuery = filtersQuery.ilike('title', `%${searchTerm}%`);
+      filtersQuery = filtersQuery.or(`title.ilike.${searchTerm}*,title.ilike.*${searchTerm},brand_name.ilike.${searchTerm}*`);
     }
   }
 
