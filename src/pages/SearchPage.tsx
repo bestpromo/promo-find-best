@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useProducts } from "@/hooks/useProducts";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -8,7 +7,8 @@ import { SearchPageHeader } from "@/components/search/SearchPageHeader";
 import { SearchPageLayout } from "@/components/search/SearchPageLayout";
 import { SearchResults } from "@/components/search/SearchResults";
 
-const PRODUCTS_PER_PAGE = 48;
+// Reduced from 48 to 24 to avoid server overload
+const PRODUCTS_PER_PAGE = 24;
 
 const SearchPage = () => {
   const {

@@ -20,6 +20,10 @@ export const useProducts = (
         console.log('=== STARTING PRODUCTS QUERY ===');
         console.log('Query params:', { searchQuery, sortBy, page, pageSize, brandFilter, priceRange, storeFilter });
 
+        // Limit maximum records to 500 per request
+        const maxRecords = 500;
+        const limitedPageSize = Math.min(pageSize, maxRecords);
+
         // Helper function to apply all filters to a query
         const applyFilters = (query: any) => {
           // Apply search filter
@@ -49,23 +53,7 @@ export const useProducts = (
           return query;
         };
 
-        // Get count with all filters applied
-        console.log('Getting filtered count...');
-        let countQuery = supabase
-          .from('offer_search')
-          .select('*', { count: 'exact', head: true });
-        
-        countQuery = applyFilters(countQuery);
-        const { count, error: countError } = await countQuery;
-
-        if (countError) {
-          console.error('Count query failed:', countError);
-          return { products: [], totalCount: 0, hasMore: false, availableBrands: [], availableStores: [] };
-        }
-
-        console.log('Filtered count result:', count);
-
-        // Get data with all filters applied
+        // Get data with all filters applied - simplified approach
         let dataQuery = supabase.from('offer_search').select('*');
         dataQuery = applyFilters(dataQuery);
 
@@ -86,12 +74,12 @@ export const useProducts = (
             break;
         }
 
-        // Apply pagination
-        const from = (page - 1) * pageSize;
-        const to = from + pageSize - 1;
+        // Apply pagination with limited page size
+        const from = (page - 1) * limitedPageSize;
+        const to = from + limitedPageSize - 1;
         dataQuery = dataQuery.range(from, to);
 
-        console.log('Executing data query with pagination:', { from, to });
+        console.log('Executing data query with limited pagination:', { from, to, limitedPageSize });
         const dataResult = await dataQuery;
 
         console.log('Data query result:', {
@@ -109,8 +97,8 @@ export const useProducts = (
         const products: ProductView[] = (dataResult.data || []).map(transformProductData);
         console.log('Transformed products:', products.length);
 
-        // Get available filters based on search only (not filtered by current selections)
-        let filtersQuery = supabase.from('offer_search').select('brand_name, store_name');
+        // Get available filters based on search only (simplified query)
+        let filtersQuery = supabase.from('offer_search').select('brand_name, store_name').limit(1000);
         if (searchQuery && searchQuery.trim()) {
           filtersQuery = filtersQuery.ilike('title', `%${searchQuery.trim()}%`);
         }
@@ -118,11 +106,17 @@ export const useProducts = (
         const filtersResult = await filtersQuery;
         const { availableBrands, availableStores } = extractUniqueFilters(filtersResult.data || []);
 
-        const hasMore = (page * pageSize) < (count || 0);
+        // Estimate total count based on returned data
+        // If we got less than requested, we're likely at the end
+        const estimatedTotalCount = products.length < limitedPageSize ? 
+          ((page - 1) * limitedPageSize) + products.length :
+          ((page - 1) * limitedPageSize) + products.length + limitedPageSize;
+
+        const hasMore = products.length === limitedPageSize;
 
         const result = {
           products,
-          totalCount: count || 0,
+          totalCount: estimatedTotalCount,
           hasMore,
           availableBrands,
           availableStores
@@ -130,7 +124,7 @@ export const useProducts = (
 
         console.log('=== FINAL RESULT ===');
         console.log('Products returned:', result.products.length);
-        console.log('Total count (filtered):', result.totalCount);
+        console.log('Estimated total count:', result.totalCount);
         console.log('Has more:', result.hasMore);
         console.log('Available brands:', result.availableBrands.length);
         console.log('Available stores:', result.availableStores.length);
