@@ -1,32 +1,36 @@
 
-import { SearchBar } from "@/components/SearchBar";
-import { ProductCard } from "@/components/ProductCard";
-import { SearchControls } from "@/components/SearchControls";
-import { FilterSidebar } from "@/components/FilterSidebar";
-import { MobileFilters } from "@/components/MobileFilters";
-import { NumberedPagination } from "@/components/NumberedPagination";
-import { useSearchParams, Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useProducts } from "@/hooks/useProducts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
+import { useSearchState } from "@/hooks/useSearchState";
+import { SearchPageHeader } from "@/components/search/SearchPageHeader";
+import { SearchPageLayout } from "@/components/search/SearchPageLayout";
+import { SearchResults } from "@/components/search/SearchResults";
 
 const PRODUCTS_PER_PAGE = 48;
 
 const SearchPage = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [sortBy, setSortBy] = useState<string>('nome-asc');
-  const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [brandFilter, setBrandFilter] = useState<string[]>([]);
-  const [storeFilter, setStoreFilter] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 1000 });
-  
-  // For infinite scroll on mobile
-  const [allProducts, setAllProducts] = useState<any[]>([]);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  
-  const query = searchParams.get("q") || "";
+  const {
+    sortBy,
+    setSortBy,
+    displayMode,
+    setDisplayMode,
+    currentPage,
+    setCurrentPage,
+    brandFilter,
+    setBrandFilter,
+    storeFilter,
+    setStoreFilter,
+    priceRange,
+    setPriceRange,
+    allProducts,
+    setAllProducts,
+    isLoadingMore,
+    setIsLoadingMore,
+    query
+  } = useSearchState();
+
   const { data, isLoading } = useProducts(
     query, 
     sortBy, 
@@ -36,6 +40,7 @@ const SearchPage = () => {
     priceRange, 
     storeFilter
   );
+  
   const isMobile = useIsMobile();
   
   const products = data?.products || [];
@@ -64,21 +69,6 @@ const SearchPage = () => {
       }
     }
   }, [products, isMobile, currentPage, isLoading]);
-
-  // Reset filters and pagination when search query changes
-  useEffect(() => {
-    setBrandFilter([]);
-    setStoreFilter([]);
-    setPriceRange({ min: 0, max: 1000 });
-    setCurrentPage(1);
-    setAllProducts([]);
-  }, [query]);
-
-  // Reset pagination when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-    setAllProducts([]);
-  }, [brandFilter, storeFilter, priceRange, sortBy]);
 
   // Load more function for infinite scroll
   const loadMore = () => {
@@ -134,145 +124,45 @@ const SearchPage = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Fixed Header */}
-      <header className={`border-b bg-white z-50 ${isMobile ? 'fixed top-0 left-0 right-0' : ''}`}>
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-8">
-            <Link to="/">
-              <img 
-                src="/lovable-uploads/5a8f2c7c-9460-4fbf-a4ab-7160fe6749d2.png" 
-                alt="Bestpromo Logo" 
-                className="h-8"
-              />
-            </Link>
-            <SearchBar initialValue={query} className="flex-1" />
-          </div>
-        </div>
-      </header>
+      <SearchPageHeader query={query} isMobile={isMobile} />
       
-      {/* Mobile Filters - Fixed below header */}
-      {isMobile && (
-        <div className="fixed top-[72px] left-0 right-0 z-40">
-          <MobileFilters
-            onBrandChange={handleBrandFilterChange}
-            onStoreChange={handleStoreFilterChange}
-            onPriceRangeChange={handlePriceRangeChange}
-            onClearFilters={handleClearFilters}
-            onSortChange={setSortBy}
-            onDisplayModeChange={setDisplayMode}
-            displayMode={displayMode}
-            availableBrands={availableBrands}
-            availableStores={availableStores}
-            searchQuery={query}
-            allProducts={displayProducts}
-            activeFiltersCount={activeFiltersCount}
-            selectedBrands={brandFilter}
-            selectedStores={storeFilter}
-            priceRange={priceRange}
-          />
-        </div>
-      )}
-
-      {/* Desktop Controls - Only show on larger screens */}
-      {!isMobile && (
-        <div className="container mx-auto px-4 py-4 border-b">
-          <SearchControls 
-            onSortChange={setSortBy}
-            onDisplayModeChange={setDisplayMode}
-            displayMode={displayMode}
-          />
-        </div>
-      )}
-
-      {/* Main Content with appropriate padding */}
-      <main className={`container mx-auto px-4 py-8 ${isMobile ? 'pt-[140px]' : ''}`}>
-        <div className="flex gap-6">
-          {/* Desktop Filter Sidebar - Only show on larger screens */}
-          {!isMobile && (
-            <FilterSidebar
-              onBrandChange={handleBrandFilterChange}
-              onStoreChange={handleStoreFilterChange}
-              onPriceRangeChange={handlePriceRangeChange}
-              onClearFilters={handleClearFilters}
-              availableBrands={availableBrands}
-              availableStores={availableStores}
-              searchQuery={query}
-              allProducts={displayProducts}
-              selectedBrands={brandFilter}
-              selectedStores={storeFilter}
-              priceRange={priceRange}
-            />
-          )}
-
-          {/* Products Section */}
-          <div className="flex-1">
-            {isLoading && currentPage === 1 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-500">Carregando produtos...</p>
-              </div>
-            ) : (
-              <>
-                <div className="mb-4">
-                  <p className="text-sm text-gray-600">
-                    {totalCount > 0 ? (
-                      <>
-                        {totalCount} produtos encontrados
-                        {!isMobile && totalCount > 0 && ` • Mostrando ${startIndex}-${endIndex}`}
-                        {brandFilter.length > 0 && ` • Marcas: ${brandFilter.join(', ')}`}
-                        {storeFilter.length > 0 && ` • Lojas: ${storeFilter.join(', ')}`}
-                        {(priceRange.min > 0 || priceRange.max < 1000) && 
-                          ` • Preço: R$ ${priceRange.min} - R$ ${priceRange.max}`
-                        }
-                      </>
-                    ) : (
-                      "Nenhum produto encontrado"
-                    )}
-                  </p>
-                </div>
-
-                <div className={`
-                  ${displayMode === 'grid' 
-                    ? 'grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6' 
-                    : 'flex flex-col gap-6'
-                  }
-                `}>
-                  {displayProducts.map((product) => (
-                    <ProductCard 
-                      key={product.id} 
-                      product={product} 
-                      displayMode={displayMode}
-                    />
-                  ))}
-                </div>
-                
-                {displayProducts.length === 0 && totalCount === 0 && (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500">Nenhum produto encontrado para "{query}"</p>
-                  </div>
-                )}
-
-                {/* Mobile infinite scroll loading indicator */}
-                {isMobile && isLoadingMore && (
-                  <div className="text-center py-4">
-                    <p className="text-gray-500">Carregando mais produtos...</p>
-                  </div>
-                )}
-
-                {/* Desktop Numbered Pagination */}
-                {!isMobile && totalPages > 1 && totalCount > 0 && (
-                  <div className="flex justify-center mt-8">
-                    <NumberedPagination
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={handlePageChange}
-                    />
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-      </main>
+      <SearchPageLayout
+        isMobile={isMobile}
+        query={query}
+        displayMode={displayMode}
+        availableBrands={availableBrands}
+        availableStores={availableStores}
+        displayProducts={displayProducts}
+        activeFiltersCount={activeFiltersCount}
+        selectedBrands={brandFilter}
+        selectedStores={storeFilter}
+        priceRange={priceRange}
+        onSortChange={setSortBy}
+        onDisplayModeChange={setDisplayMode}
+        onBrandFilterChange={handleBrandFilterChange}
+        onStoreFilterChange={handleStoreFilterChange}
+        onPriceRangeChange={handlePriceRangeChange}
+        onClearFilters={handleClearFilters}
+      >
+        <SearchResults
+          displayProducts={displayProducts}
+          displayMode={displayMode}
+          totalCount={totalCount}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          brandFilter={brandFilter}
+          storeFilter={storeFilter}
+          priceRange={priceRange}
+          query={query}
+          isLoading={isLoading}
+          isLoadingMore={isLoadingMore}
+          isMobile={isMobile}
+          hasMore={hasMore}
+          onPageChange={handlePageChange}
+        />
+      </SearchPageLayout>
     </div>
   );
 };
