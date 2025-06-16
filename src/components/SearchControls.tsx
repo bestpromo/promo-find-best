@@ -1,3 +1,4 @@
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Grid2X2, List } from "lucide-react";
@@ -17,16 +18,16 @@ export const SearchControls = ({
   return (
     <div className="flex items-center gap-4 justify-end">
       <div className="flex items-center gap-2">
-        <Label className="text-sm font-medium text-gray-700">Order by:</Label>
+        <Label className="text-sm font-medium text-gray-700">Ordenar por:</Label>
         <Select onValueChange={onSortChange} defaultValue="name-asc">
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Sort by" />
+            <SelectValue placeholder="Ordenar por" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="price-desc">Highest Price</SelectItem>
-            <SelectItem value="price-asc">Lowest Price</SelectItem>
-            <SelectItem value="name-asc">Name A-Z</SelectItem>
-            <SelectItem value="name-desc">Name Z-A</SelectItem>
+            <SelectItem value="price-desc">Maior Preço</SelectItem>
+            <SelectItem value="price-asc">Menor Preço</SelectItem>
+            <SelectItem value="name-asc">Nome A-Z</SelectItem>
+            <SelectItem value="name-desc">Nome Z-A</SelectItem>
           </SelectContent>
         </Select>
       </div>
