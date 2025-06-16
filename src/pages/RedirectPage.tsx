@@ -22,6 +22,9 @@ const RedirectPage = () => {
       return;
     }
 
+    // Registrar o clique imediatamente ao carregar a página
+    registerClick();
+
     const interval = setInterval(() => {
       setCountdown((prev) => {
         const newCountdown = prev - 1;
@@ -40,26 +43,36 @@ const RedirectPage = () => {
     return () => clearInterval(interval);
   }, [deepLinkUrl, offerId, navigate]);
 
-  const handleRedirect = async () => {
+  const registerClick = async () => {
     try {
-      // Adicionar registro na tabela catalog_offer_click
-      const { error } = await supabase
+      console.log('Registrando clique para offer_id:', offerId);
+      
+      const { data, error } = await supabase
         .from('catalog_offer_click')
-        .insert({
+        .insert([{
           offer_id: offerId,
           clicked_at: new Date().toISOString(),
           user_ip: '', // Pode ser preenchido no backend se necessário
           user_agent: navigator.userAgent,
           referrer_url: window.location.origin
-        });
+        }])
+        .select();
 
       if (error) {
         console.error('Erro ao registrar clique:', error);
+      } else {
+        console.log('Clique registrado com sucesso:', data);
       }
+    } catch (error) {
+      console.error('Erro durante registro do clique:', error);
+    }
+  };
 
+  const handleRedirect = () => {
+    try {
+      console.log('Redirecionando para:', deepLinkUrl);
       // Redirecionar para a URL da loja parceira na mesma aba
       window.location.href = deepLinkUrl;
-      
     } catch (error) {
       console.error('Erro durante redirecionamento:', error);
       navigate("/");
