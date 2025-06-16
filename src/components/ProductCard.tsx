@@ -55,6 +55,19 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
     product.deep_link_url : 
     product.url;
 
+  // Helper function to format price with different font sizes for cents
+  const formatPriceWithCents = (price: number) => {
+    const priceStr = price.toFixed(2);
+    const [reais, centavos] = priceStr.split('.');
+    
+    return (
+      <span>
+        R$ {reais}
+        <span style={{ fontSize: '16px' }}>,{centavos}</span>
+      </span>
+    );
+  };
+
   // Price rendering logic based on business rules
   const renderPrice = () => {
     if (promotionalPrice && promotionalPrice !== originalPrice) {
@@ -65,7 +78,7 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
             R$ {originalPrice?.toFixed(2)}
           </p>
           <p className="text-orange-500 font-bold" style={{ fontSize: '28px' }}>
-            R$ {promotionalPrice.toFixed(2)}
+            {formatPriceWithCents(promotionalPrice)}
           </p>
         </div>
       );
@@ -74,7 +87,7 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
       const displayPrice = promotionalPrice || originalPrice || 0;
       return (
         <p className="text-orange-500 font-bold mb-2" style={{ fontSize: '28px' }}>
-          R$ {displayPrice.toFixed(2)}
+          {formatPriceWithCents(displayPrice)}
         </p>
       );
     }

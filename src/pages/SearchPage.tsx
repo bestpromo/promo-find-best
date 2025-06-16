@@ -30,7 +30,7 @@ const SearchPage = () => {
   // Reset filters when search query changes
   useEffect(() => {
     console.log('Search query changed to:', query);
-    console.log('Clearing all filters');
+    console.log('Clearing all filters in SearchPage');
     setBrandFilter([]);
     setPriceRange({ min: 0, max: 1000 });
     setVisibleProducts(PRODUCTS_PER_PAGE);
@@ -110,6 +110,7 @@ const SearchPage = () => {
             onPriceRangeChange={handlePriceRangeChange}
             onClearFilters={handleClearFilters}
             availableBrands={availableBrands}
+            searchQuery={query}
           />
 
           {/* Products Section */}

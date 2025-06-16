@@ -12,11 +12,25 @@ interface FilterSidebarProps {
   onPriceRangeChange: (range: { min: number; max: number }) => void;
   onClearFilters: () => void;
   availableBrands: string[];
+  searchQuery?: string; // Add searchQuery prop to detect changes
 }
 
-export const FilterSidebar = ({ onBrandChange, onPriceRangeChange, onClearFilters, availableBrands }: FilterSidebarProps) => {
+export const FilterSidebar = ({ 
+  onBrandChange, 
+  onPriceRangeChange, 
+  onClearFilters, 
+  availableBrands,
+  searchQuery 
+}: FilterSidebarProps) => {
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState([0, 1000]);
+
+  // Reset filters when search query changes
+  useEffect(() => {
+    console.log('FilterSidebar: Search query changed, resetting filters');
+    setSelectedBrands([]);
+    setPriceRange([0, 1000]);
+  }, [searchQuery]);
 
   // RULE 4: Create ordered brand list with selected brands at the top
   const getOrderedBrands = () => {
