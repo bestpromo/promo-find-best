@@ -33,6 +33,7 @@ export const useClickRegistration = () => {
       if (!offerId || offerId.trim() === '') {
         console.error('ERRO: offer_id inválido');
         setRegistrationStatus('error');
+        setIsRegistering(false);
         return;
       }
 

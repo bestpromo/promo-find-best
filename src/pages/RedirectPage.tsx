@@ -20,9 +20,18 @@ const RedirectPage = () => {
 
   const handleRedirect = () => {
     try {
-      console.log('Redirecionando para:', deepLinkUrl);
+      console.log('=== INICIANDO REDIRECIONAMENTO ===');
+      console.log('deepLinkUrl:', deepLinkUrl);
       console.log('Status do registro:', registrationStatus);
-      window.location.href = deepLinkUrl!;
+      
+      if (!deepLinkUrl) {
+        console.error('deepLinkUrl não encontrada, redirecionando para home');
+        navigate("/");
+        return;
+      }
+
+      console.log('Redirecionando para:', deepLinkUrl);
+      window.location.href = deepLinkUrl;
     } catch (error) {
       console.error('Erro durante redirecionamento:', error);
       navigate("/");
@@ -30,15 +39,21 @@ const RedirectPage = () => {
   };
 
   const { countdown, progress } = useRedirectCountdown({
-    initialCountdown: 5,
+    initialCountdown: 3,
+    registrationStatus,
     onComplete: handleRedirect
   });
 
   useEffect(() => {
     console.log('=== REDIRECT PAGE LOADED ===');
     console.log('URL completa:', window.location.href);
-    console.log('offer_id:', offerId);
-    console.log('deepLinkUrl:', deepLinkUrl);
+    console.log('Parâmetros recebidos:', {
+      offerId,
+      deepLinkUrl,
+      title,
+      brandName,
+      price
+    });
 
     if (!deepLinkUrl || !offerId) {
       console.log('Parâmetros obrigatórios faltando - redirecionando para home');
@@ -47,12 +62,13 @@ const RedirectPage = () => {
     }
 
     // Registrar o clique imediatamente
+    console.log('Iniciando registro do clique...');
     registerClick(offerId);
   }, [deepLinkUrl, offerId, navigate, registerClick]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
-      <div className="text-center max-w-md w-full">
+      <div className="text-center max-w-md w-full bg-white rounded-lg shadow-lg p-8">
         {/* Logo do Bestpromo */}
         <div className="mb-8">
           <img 
