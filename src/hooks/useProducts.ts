@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -8,6 +9,7 @@ export type ProductView = {
   url_slug: string;
   deep_link_url: string;
   brand_name: string;
+  advertiser_name: string; // Add this missing property
   image_url: string;
   sale_price: number | null;
   promotional_price: number | null;
@@ -64,6 +66,7 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
           url_slug: item.url_slug || '',
           deep_link_url: item.deep_link_url || '',
           brand_name: item.brand_name || 'Unknown Store',
+          advertiser_name: item.advertiser_name || '', // Add this property mapping
           image_url: item.image_url || '/placeholder.svg',
           sale_price: parseFloat(item.sale_price) || null,
           promotional_price: parseFloat(item.promotional_price) || null,
