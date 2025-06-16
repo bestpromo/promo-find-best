@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import type { ProductView, ProductsResponse, ProductFilters } from "@/types/product";
 import { createDataQuery, createCountQuery, createFiltersQuery } from "@/utils/productQueries";
@@ -34,7 +35,7 @@ export const useProducts = (
 
         console.log('Executing data and filters queries...');
         
-        // Execute data and filters queries first (skip count for now to avoid timeouts)
+        // Execute data and filters queries
         const [{ data, error }, { data: filtersData, error: filtersError }] = await Promise.all([
           dataQuery,
           filtersQuery
@@ -63,15 +64,28 @@ export const useProducts = (
         // Extract unique brands and stores
         const { availableBrands, availableStores } = extractUniqueFilters(filtersData);
 
-        // For now, estimate total count based on returned data to avoid timeout issues
-        // If we get a full page, assume there might be more
+        // Improved total count estimation
         const hasMore = products.length === pageSize;
-        const estimatedTotal = hasMore ? (page * pageSize) + 1 : (page - 1) * pageSize + products.length;
+        let estimatedTotal: number;
+        
+        if (page === 1 && products.length < pageSize) {
+          // First page with less than full page = exact count
+          estimatedTotal = products.length;
+        } else if (hasMore) {
+          // Full page returned, estimate there are more pages
+          // Use filters data length as a better estimate of total available products
+          estimatedTotal = Math.max(filtersData?.length || (page * pageSize + 1), page * pageSize + 1);
+        } else {
+          // Last page (partial results)
+          estimatedTotal = (page - 1) * pageSize + products.length;
+        }
 
         console.log('Final results:', { 
           productsCount: products.length, 
           estimatedTotal, 
           hasMore, 
+          page,
+          pageSize,
           availableBrandsCount: availableBrands.length,
           availableStoresCount: availableStores.length 
         });

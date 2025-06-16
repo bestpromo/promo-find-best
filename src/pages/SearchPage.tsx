@@ -1,3 +1,4 @@
+
 import { SearchBar } from "@/components/SearchBar";
 import { ProductCard } from "@/components/ProductCard";
 import { SearchControls } from "@/components/SearchControls";
@@ -44,8 +45,8 @@ const SearchPage = () => {
   const availableStores = data?.availableStores || [];
 
   // Calculate pagination info
-  const totalPages = Math.ceil(totalCount / PRODUCTS_PER_PAGE);
-  const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE + 1;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PRODUCTS_PER_PAGE));
+  const startIndex = totalCount > 0 ? (currentPage - 1) * PRODUCTS_PER_PAGE + 1 : 0;
   const endIndex = Math.min(currentPage * PRODUCTS_PER_PAGE, totalCount);
 
   // Calculate active filters count for mobile
@@ -121,6 +122,15 @@ const SearchPage = () => {
 
   // Determine which products to display
   const displayProducts = isMobile ? allProducts : products;
+
+  console.log('SearchPage render:', { 
+    totalCount, 
+    totalPages, 
+    currentPage, 
+    isMobile,
+    displayProductsLength: displayProducts.length,
+    shouldShowPagination: !isMobile && totalPages > 1
+  });
 
   return (
     <div className="min-h-screen">
@@ -204,13 +214,19 @@ const SearchPage = () => {
               <>
                 <div className="mb-4">
                   <p className="text-sm text-gray-600">
-                    {totalCount} produtos encontrados
-                    {totalCount > 0 && !isMobile && ` • Mostrando ${startIndex}-${endIndex}`}
-                    {brandFilter.length > 0 && ` • Marcas: ${brandFilter.join(', ')}`}
-                    {storeFilter.length > 0 && ` • Lojas: ${storeFilter.join(', ')}`}
-                    {(priceRange.min > 0 || priceRange.max < 1000) && 
-                      ` • Preço: R$ ${priceRange.min} - R$ ${priceRange.max}`
-                    }
+                    {totalCount > 0 ? (
+                      <>
+                        {totalCount} produtos encontrados
+                        {!isMobile && totalCount > 0 && ` • Mostrando ${startIndex}-${endIndex}`}
+                        {brandFilter.length > 0 && ` • Marcas: ${brandFilter.join(', ')}`}
+                        {storeFilter.length > 0 && ` • Lojas: ${storeFilter.join(', ')}`}
+                        {(priceRange.min > 0 || priceRange.max < 1000) && 
+                          ` • Preço: R$ ${priceRange.min} - R$ ${priceRange.max}`
+                        }
+                      </>
+                    ) : (
+                      "Nenhum produto encontrado"
+                    )}
                   </p>
                 </div>
 
@@ -229,7 +245,7 @@ const SearchPage = () => {
                   ))}
                 </div>
                 
-                {displayProducts.length === 0 && (
+                {displayProducts.length === 0 && totalCount === 0 && (
                   <div className="text-center py-12">
                     <p className="text-gray-500">Nenhum produto encontrado para "{query}"</p>
                   </div>
@@ -243,7 +259,7 @@ const SearchPage = () => {
                 )}
 
                 {/* Desktop Numbered Pagination */}
-                {!isMobile && totalPages > 1 && (
+                {!isMobile && totalPages > 1 && totalCount > 0 && (
                   <div className="flex justify-center mt-8">
                     <NumberedPagination
                       currentPage={currentPage}
