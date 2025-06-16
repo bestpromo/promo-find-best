@@ -683,6 +683,52 @@ export type Database = {
           },
         ]
       }
+      catalog_offer_click: {
+        Row: {
+          click_id: number
+          clicked_at: string
+          ip_address: unknown | null
+          offer_id: string
+          referrer: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: number | null
+        }
+        Insert: {
+          click_id?: number
+          clicked_at?: string
+          ip_address?: unknown | null
+          offer_id: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: number | null
+        }
+        Update: {
+          click_id?: number
+          clicked_at?: string
+          ip_address?: unknown | null
+          offer_id?: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_offer"
+            columns: ["offer_id"]
+            referencedRelation: "catalog_offer"
+            referencedColumns: ["offer_id"]
+          },
+          {
+            foreignKeyName: "fk_offer"
+            columns: ["offer_id"]
+            referencedRelation: "offer_search"
+            referencedColumns: ["offer_id"]
+          },
+        ]
+      }
       catalog_offer_image: {
         Row: {
           alt_text: string | null
@@ -1209,10 +1255,12 @@ export type Database = {
           image_url: string | null
           merchant_id: number | null
           offer_id: string | null
+          partner_name: string | null
           promotional_price: number | null
           sale_price: number | null
           short_description: string | null
           sku: string | null
+          store_name: string | null
           title: string | null
           url_slug: string | null
         }
