@@ -20,78 +20,54 @@ export const useProducts = (
         console.log('=== STARTING PRODUCTS QUERY ===');
         console.log('Query params:', { searchQuery, sortBy, page, pageSize, brandFilter, priceRange, storeFilter });
 
-        // Build base query with all filters
-        let baseQuery = supabase.from('offer_search').select('*');
-        
-        // Apply search filter
-        if (searchQuery && searchQuery.trim()) {
-          console.log('Applying search filter for:', searchQuery);
-          baseQuery = baseQuery.ilike('title', `%${searchQuery.trim()}%`);
-        }
+        // Helper function to apply all filters to a query
+        const applyFilters = (query: any) => {
+          // Apply search filter
+          if (searchQuery && searchQuery.trim()) {
+            console.log('Applying search filter for:', searchQuery);
+            query = query.ilike('title', `%${searchQuery.trim()}%`);
+          }
 
-        // Apply brand filter
-        if (brandFilter && brandFilter.length > 0) {
-          console.log('Applying brand filter:', brandFilter);
-          baseQuery = baseQuery.in('brand_name', brandFilter);
-        }
+          // Apply brand filter
+          if (brandFilter && brandFilter.length > 0) {
+            console.log('Applying brand filter:', brandFilter);
+            query = query.in('brand_name', brandFilter);
+          }
 
-        // Apply store filter
-        if (storeFilter && storeFilter.length > 0) {
-          console.log('Applying store filter:', storeFilter);
-          baseQuery = baseQuery.in('store_name', storeFilter);
-        }
+          // Apply store filter
+          if (storeFilter && storeFilter.length > 0) {
+            console.log('Applying store filter:', storeFilter);
+            query = query.in('store_name', storeFilter);
+          }
 
-        // Apply price range filter
-        if (priceRange && (priceRange.min > 0 || priceRange.max < 1000)) {
-          console.log('Applying price range filter:', priceRange);
-          baseQuery = baseQuery.gte('sale_price', priceRange.min).lte('sale_price', priceRange.max);
-        }
+          // Apply price range filter
+          if (priceRange && (priceRange.min > 0 || priceRange.max < 1000)) {
+            console.log('Applying price range filter:', priceRange);
+            query = query.gte('sale_price', priceRange.min).lte('sale_price', priceRange.max);
+          }
 
-        // Get total count with filters applied
+          return query;
+        };
+
+        // Get count with all filters applied
         console.log('Getting filtered count...');
-        const { count } = await supabase
+        let countQuery = supabase
           .from('offer_search')
-          .select('*', { count: 'exact', head: true })
-          .ilike('title', searchQuery && searchQuery.trim() ? `%${searchQuery.trim()}%` : '%')
-          .then(async (result) => {
-            let countQuery = supabase
-              .from('offer_search')
-              .select('*', { count: 'exact', head: true });
+          .select('*', { count: 'exact', head: true });
+        
+        countQuery = applyFilters(countQuery);
+        const { count, error: countError } = await countQuery;
 
-            if (searchQuery && searchQuery.trim()) {
-              countQuery = countQuery.ilike('title', `%${searchQuery.trim()}%`);
-            }
-            if (brandFilter && brandFilter.length > 0) {
-              countQuery = countQuery.in('brand_name', brandFilter);
-            }
-            if (storeFilter && storeFilter.length > 0) {
-              countQuery = countQuery.in('store_name', storeFilter);
-            }
-            if (priceRange && (priceRange.min > 0 || priceRange.max < 1000)) {
-              countQuery = countQuery.gte('sale_price', priceRange.min).lte('sale_price', priceRange.max);
-            }
-
-            return countQuery;
-          });
+        if (countError) {
+          console.error('Count query failed:', countError);
+          return { products: [], totalCount: 0, hasMore: false, availableBrands: [], availableStores: [] };
+        }
 
         console.log('Filtered count result:', count);
 
-        // Clone base query for data retrieval
+        // Get data with all filters applied
         let dataQuery = supabase.from('offer_search').select('*');
-        
-        // Reapply all filters to data query
-        if (searchQuery && searchQuery.trim()) {
-          dataQuery = dataQuery.ilike('title', `%${searchQuery.trim()}%`);
-        }
-        if (brandFilter && brandFilter.length > 0) {
-          dataQuery = dataQuery.in('brand_name', brandFilter);
-        }
-        if (storeFilter && storeFilter.length > 0) {
-          dataQuery = dataQuery.in('store_name', storeFilter);
-        }
-        if (priceRange && (priceRange.min > 0 || priceRange.max < 1000)) {
-          dataQuery = dataQuery.gte('sale_price', priceRange.min).lte('sale_price', priceRange.max);
-        }
+        dataQuery = applyFilters(dataQuery);
 
         // Apply sorting
         switch (sortBy) {
