@@ -45,34 +45,57 @@ const RedirectPage = () => {
 
   const registerClick = async () => {
     try {
-      console.log('Registrando clique para offer_id:', offerId);
-      console.log('Dados que serão enviados:', {
+      console.log('=== INÍCIO DO REGISTRO DE CLIQUE ===');
+      console.log('offer_id recebido:', offerId);
+      console.log('Tipo do offer_id:', typeof offerId);
+      
+      // Verificar conexão com Supabase
+      console.log('Testando conexão com Supabase...');
+      const { data: testData, error: testError } = await supabase
+        .from('catalog_offer_click')
+        .select('count', { count: 'exact', head: true });
+      
+      if (testError) {
+        console.error('Erro na conexão com Supabase:', testError);
+        return;
+      }
+      
+      console.log('Conexão com Supabase OK');
+      
+      // Preparar dados para inserção
+      const clickData = {
         offer_id: offerId,
         clicked_at: new Date().toISOString(),
-        user_ip: '',
+        user_ip: null, // Explicitamente null
         user_agent: navigator.userAgent,
         referrer_url: window.location.origin
-      });
+      };
       
+      console.log('Dados preparados para inserção:', clickData);
+      
+      // Tentar inserir o registro
+      console.log('Tentando inserir registro...');
       const { data, error } = await supabase
         .from('catalog_offer_click')
-        .insert([{
-          offer_id: offerId,
-          clicked_at: new Date().toISOString(),
-          user_ip: '', // Pode ser preenchido no backend se necessário
-          user_agent: navigator.userAgent,
-          referrer_url: window.location.origin
-        }])
+        .insert([clickData])
         .select();
 
       if (error) {
-        console.error('Erro ao registrar clique:', error);
-        console.error('Detalhes do erro:', JSON.stringify(error, null, 2));
+        console.error('=== ERRO AO REGISTRAR CLIQUE ===');
+        console.error('Código do erro:', error.code);
+        console.error('Mensagem do erro:', error.message);
+        console.error('Detalhes completos:', error);
+        console.error('Hint:', error.hint);
+        console.error('Details:', error.details);
       } else {
-        console.log('Clique registrado com sucesso:', data);
+        console.log('=== CLIQUE REGISTRADO COM SUCESSO ===');
+        console.log('Dados retornados:', data);
+        console.log('Número de registros inseridos:', data?.length || 0);
       }
     } catch (error) {
-      console.error('Erro durante registro do clique:', error);
+      console.error('=== ERRO DURANTE EXECUÇÃO ===');
+      console.error('Erro capturado:', error);
+      console.error('Stack trace:', error instanceof Error ? error.stack : 'N/A');
     }
   };
 
