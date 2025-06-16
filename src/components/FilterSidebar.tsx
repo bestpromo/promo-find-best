@@ -12,7 +12,8 @@ interface FilterSidebarProps {
   onPriceRangeChange: (range: { min: number; max: number }) => void;
   onClearFilters: () => void;
   availableBrands: string[];
-  searchQuery?: string; // Add searchQuery prop to detect changes
+  searchQuery?: string;
+  allProducts?: any[]; // Add allProducts to calculate counts
 }
 
 export const FilterSidebar = ({ 
@@ -20,7 +21,8 @@ export const FilterSidebar = ({
   onPriceRangeChange, 
   onClearFilters, 
   availableBrands,
-  searchQuery 
+  searchQuery,
+  allProducts = []
 }: FilterSidebarProps) => {
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState([0, 1000]);
@@ -31,6 +33,11 @@ export const FilterSidebar = ({
     setSelectedBrands([]);
     setPriceRange([0, 1000]);
   }, [searchQuery]);
+
+  // Calculate product count for each brand
+  const getBrandProductCount = (brand: string) => {
+    return allProducts.filter(product => product.brand_name === brand).length;
+  };
 
   // RULE 4: Create ordered brand list with selected brands at the top
   const getOrderedBrands = () => {
@@ -101,6 +108,7 @@ export const FilterSidebar = ({
                 {orderedBrands.length > 0 ? (
                   orderedBrands.map((brand) => {
                     const isSelected = selectedBrands.includes(brand);
+                    const productCount = getBrandProductCount(brand);
                     return (
                       <div 
                         key={brand} 
@@ -113,19 +121,26 @@ export const FilterSidebar = ({
                           checked={isSelected}
                           onCheckedChange={() => handleBrandToggle(brand)}
                         />
-                        <Label 
-                          htmlFor={brand} 
-                          className={`text-sm cursor-pointer flex-1 ${
-                            isSelected ? 'font-medium text-blue-700' : ''
-                          }`}
-                        >
-                          {brand}
-                        </Label>
-                        {isSelected && (
-                          <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full">
-                            {selectedBrands.indexOf(brand) + 1}
-                          </span>
-                        )}
+                        <div className="flex items-center justify-between w-full">
+                          <Label 
+                            htmlFor={brand} 
+                            className={`text-sm cursor-pointer ${
+                              isSelected ? 'font-medium text-blue-700' : ''
+                            }`}
+                          >
+                            {brand}
+                          </Label>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500">
+                              ({productCount})
+                            </span>
+                            {isSelected && (
+                              <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full">
+                                {selectedBrands.indexOf(brand) + 1}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     );
                   })

@@ -111,6 +111,7 @@ const SearchPage = () => {
             onClearFilters={handleClearFilters}
             availableBrands={availableBrands}
             searchQuery={query}
+            allProducts={allProducts}
           />
 
           {/* Products Section */}
