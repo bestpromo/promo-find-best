@@ -13,8 +13,8 @@ export const createBaseQuery = (filters: ProductFilters) => {
     const searchTerm = searchQuery.trim().toLowerCase();
     console.log('Adding search filter for term:', searchTerm);
     
-    // Simple ilike search on title only to avoid timeout
-    query = query.ilike('title', `%${searchTerm}%`);
+    // Simple like search on title only to avoid timeout
+    query = query.like('title', `%${searchTerm}%`);
   }
 
   // Apply filters
@@ -73,8 +73,8 @@ export const createCountQuery = (filters: ProductFilters) => {
   console.log('Creating count query for accurate total');
   let countQuery = createBaseQuery(filters);
   
-  // Use count with exact option for accurate counting
-  return countQuery.select('*', { count: 'exact', head: true });
+  // Use count with proper syntax for accurate counting
+  return countQuery.select('*', { count: 'exact' });
 };
 
 // Test query to check if we can get any data at all
@@ -97,7 +97,7 @@ export const createFiltersQuery = (filters: ProductFilters) => {
   // Apply search filter if exists
   if (searchQuery && searchQuery.trim()) {
     const searchTerm = searchQuery.trim().toLowerCase();
-    baseQuery = baseQuery.ilike('title', `%${searchTerm}%`);
+    baseQuery = baseQuery.like('title', `%${searchTerm}%`);
   }
   
   // Select only brand and store names without limit to get all available options
