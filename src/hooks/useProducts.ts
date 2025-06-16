@@ -93,20 +93,31 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
         if (brandFilter && brandFilter.length > 0) {
           console.log('=== APPLYING BRAND FILTER ===');
           console.log('Selected brands:', brandFilter);
+          console.log('Available brands in current search:', availableBrands);
           
-          filteredProducts = allProducts.filter(product => {
-            const isIncluded = brandFilter.includes(product.brand_name);
-            return isIncluded;
-          });
+          // Only filter by brands that actually exist in the current search results
+          const validSelectedBrands = brandFilter.filter(brand => availableBrands.includes(brand));
+          console.log('Valid selected brands (exist in current results):', validSelectedBrands);
           
-          console.log(`Filtered from ${allProducts.length} to ${filteredProducts.length} products`);
-          
-          // Show count by brand for verification
-          const brandCounts = filteredProducts.reduce((acc, p) => {
-            acc[p.brand_name] = (acc[p.brand_name] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>);
-          console.log('Products by selected brands:', brandCounts);
+          if (validSelectedBrands.length > 0) {
+            filteredProducts = allProducts.filter(product => {
+              const isIncluded = validSelectedBrands.includes(product.brand_name);
+              return isIncluded;
+            });
+            
+            console.log(`Filtered from ${allProducts.length} to ${filteredProducts.length} products`);
+            
+            // Show count by brand for verification
+            const brandCounts = filteredProducts.reduce((acc, p) => {
+              acc[p.brand_name] = (acc[p.brand_name] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>);
+            console.log('Products by selected brands:', brandCounts);
+          } else {
+            console.log('No valid brands selected - all selected brands are from previous searches');
+            // If no valid brands are selected, show all products
+            filteredProducts = allProducts;
+          }
         }
 
         // Apply price range filter if provided
