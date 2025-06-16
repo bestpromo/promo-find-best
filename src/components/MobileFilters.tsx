@@ -17,6 +17,8 @@ interface MobileFiltersProps {
   searchQuery?: string;
   allProducts?: any[];
   activeFiltersCount: number;
+  selectedBrands: string[];
+  priceRange: { min: number; max: number };
 }
 
 export const MobileFilters = ({
@@ -29,7 +31,9 @@ export const MobileFilters = ({
   availableBrands,
   searchQuery,
   allProducts,
-  activeFiltersCount
+  activeFiltersCount,
+  selectedBrands,
+  priceRange
 }: MobileFiltersProps) => {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
@@ -65,6 +69,8 @@ export const MobileFilters = ({
                   availableBrands={availableBrands}
                   searchQuery={searchQuery}
                   allProducts={allProducts}
+                  selectedBrands={selectedBrands}
+                  priceRange={priceRange}
                 />
               </div>
             </SheetContent>

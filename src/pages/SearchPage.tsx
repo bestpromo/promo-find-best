@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useProducts, ProductView, applyFilters } from "@/hooks/useProducts";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
 const PRODUCTS_PER_PAGE = 50;
 
@@ -103,6 +104,13 @@ const SearchPage = () => {
   const productsToShow = sortedProducts.slice(0, visibleProducts);
   const hasMoreProducts = visibleProducts < sortedProducts.length;
 
+  // Use infinite scroll hook for mobile
+  const { isLoading: isLoadingMore } = useInfiniteScroll({
+    hasMore: hasMoreProducts,
+    onLoadMore: handleLoadMore,
+    threshold: 200
+  });
+
   return (
     <div className="min-h-screen">
       <header className="border-b">
@@ -133,6 +141,8 @@ const SearchPage = () => {
           searchQuery={query}
           allProducts={allProducts}
           activeFiltersCount={activeFiltersCount}
+          selectedBrands={brandFilter}
+          priceRange={priceRange}
         />
       )}
 
@@ -158,6 +168,8 @@ const SearchPage = () => {
               availableBrands={availableBrands}
               searchQuery={query}
               allProducts={allProducts}
+              selectedBrands={brandFilter}
+              priceRange={priceRange}
             />
           )}
 
@@ -165,7 +177,7 @@ const SearchPage = () => {
           <div className="flex-1">
             {isLoading ? (
               <div className="text-center py-12">
-                <p className="text-gray-500">Loading products...</p>
+                <p className="text-gray-500">Carregando produtos...</p>
               </div>
             ) : (
               <>
@@ -200,7 +212,15 @@ const SearchPage = () => {
                   </div>
                 )}
 
-                {hasMoreProducts && (
+                {/* Show loading indicator on mobile during infinite scroll */}
+                {isMobile && isLoadingMore && (
+                  <div className="text-center py-4">
+                    <p className="text-gray-500">Carregando mais produtos...</p>
+                  </div>
+                )}
+
+                {/* Show load more button only on desktop/tablet */}
+                {!isMobile && hasMoreProducts && (
                   <div className="flex justify-center mt-8">
                     <Button 
                       onClick={handleLoadMore}

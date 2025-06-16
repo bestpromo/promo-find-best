@@ -13,7 +13,9 @@ interface FilterSidebarProps {
   onClearFilters: () => void;
   availableBrands: string[];
   searchQuery?: string;
-  allProducts?: any[]; // Add allProducts to calculate counts
+  allProducts?: any[];
+  selectedBrands?: string[];
+  priceRange?: { min: number; max: number };
 }
 
 export const FilterSidebar = ({ 
@@ -22,16 +24,27 @@ export const FilterSidebar = ({
   onClearFilters, 
   availableBrands,
   searchQuery,
-  allProducts = []
+  allProducts = [],
+  selectedBrands = [],
+  priceRange = { min: 0, max: 1000 }
 }: FilterSidebarProps) => {
-  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState([0, 1000]);
+  const [localSelectedBrands, setLocalSelectedBrands] = useState<string[]>(selectedBrands);
+  const [localPriceRange, setLocalPriceRange] = useState([priceRange.min, priceRange.max]);
+
+  // Sync with parent state
+  useEffect(() => {
+    setLocalSelectedBrands(selectedBrands);
+  }, [selectedBrands]);
+
+  useEffect(() => {
+    setLocalPriceRange([priceRange.min, priceRange.max]);
+  }, [priceRange]);
 
   // Reset filters when search query changes
   useEffect(() => {
     console.log('FilterSidebar: Search query changed, resetting filters');
-    setSelectedBrands([]);
-    setPriceRange([0, 1000]);
+    setLocalSelectedBrands([]);
+    setLocalPriceRange([0, 1000]);
   }, [searchQuery]);
 
   // Calculate product count for each brand
@@ -41,43 +54,43 @@ export const FilterSidebar = ({
 
   // RULE 4: Create ordered brand list with selected brands at the top
   const getOrderedBrands = () => {
-    if (selectedBrands.length === 0) {
+    if (localSelectedBrands.length === 0) {
       // No brands selected, show all brands in alphabetical order
       return availableBrands;
     }
     
     // Show selected brands first (in selection order), then unselected brands alphabetically
     const unselectedBrands = availableBrands
-      .filter(brand => !selectedBrands.includes(brand))
+      .filter(brand => !localSelectedBrands.includes(brand))
       .sort();
     
-    return [...selectedBrands, ...unselectedBrands];
+    return [...localSelectedBrands, ...unselectedBrands];
   };
 
   const handleBrandToggle = (brand: string) => {
     console.log('=== BRAND TOGGLE ===');
     console.log('Toggling brand:', brand);
-    console.log('Current selected brands:', selectedBrands);
+    console.log('Current selected brands:', localSelectedBrands);
     
-    const newSelectedBrands = selectedBrands.includes(brand)
-      ? selectedBrands.filter(b => b !== brand)
-      : [...selectedBrands, brand];
+    const newSelectedBrands = localSelectedBrands.includes(brand)
+      ? localSelectedBrands.filter(b => b !== brand)
+      : [...localSelectedBrands, brand];
     
     console.log('New selected brands:', newSelectedBrands);
     
-    setSelectedBrands(newSelectedBrands);
+    setLocalSelectedBrands(newSelectedBrands);
     onBrandChange(newSelectedBrands);
   };
 
   const handlePriceChange = (values: number[]) => {
-    setPriceRange(values);
+    setLocalPriceRange(values);
     onPriceRangeChange({ min: values[0], max: values[1] });
   };
 
   const handleClearFilters = () => {
     console.log('Clearing all filters');
-    setSelectedBrands([]);
-    setPriceRange([0, 1000]);
+    setLocalSelectedBrands([]);
+    setLocalPriceRange([0, 1000]);
     onClearFilters();
   };
 
@@ -101,13 +114,13 @@ export const FilterSidebar = ({
           {/* Brand Filter */}
           <div>
             <Label className="text-sm font-medium mb-3 block">
-              Marca {selectedBrands.length > 0 && `(${selectedBrands.length} selecionadas)`}
+              Marca {localSelectedBrands.length > 0 && `(${localSelectedBrands.length} selecionadas)`}
             </Label>
             <ScrollArea className="h-80 w-full rounded-md border p-2">
               <div className="space-y-2">
                 {orderedBrands.length > 0 ? (
                   orderedBrands.map((brand) => {
-                    const isSelected = selectedBrands.includes(brand);
+                    const isSelected = localSelectedBrands.includes(brand);
                     const productCount = getBrandProductCount(brand);
                     return (
                       <div 
@@ -136,7 +149,7 @@ export const FilterSidebar = ({
                             </span>
                             {isSelected && (
                               <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full">
-                                {selectedBrands.indexOf(brand) + 1}
+                                {localSelectedBrands.indexOf(brand) + 1}
                               </span>
                             )}
                           </div>
@@ -154,10 +167,10 @@ export const FilterSidebar = ({
           {/* Price Range Filter */}
           <div>
             <Label className="text-sm font-medium mb-3 block">
-              Faixa de Preço: R$ {priceRange[0]} - R$ {priceRange[1]}
+              Faixa de Preço: R$ {localPriceRange[0]} - R$ {localPriceRange[1]}
             </Label>
             <Slider
-              value={priceRange}
+              value={localPriceRange}
               onValueChange={handlePriceChange}
               max={1000}
               min={0}

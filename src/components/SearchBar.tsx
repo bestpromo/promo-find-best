@@ -12,9 +12,17 @@ export const SearchBar = ({ initialValue = "", className = "" }: SearchBarProps)
   const [searchQuery, setSearchQuery] = useState(initialValue);
   const navigate = useNavigate();
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+  const handleSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
   };
 
   return (
@@ -24,20 +32,18 @@ export const SearchBar = ({ initialValue = "", className = "" }: SearchBarProps)
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyPress={handleKeyPress}
           placeholder="Buscar as melhores promoções e produtos"
           className="w-full px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:border-orange-500 pl-12"
         />
-        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+        <button 
+          type="button"
+          onClick={() => handleSearch()}
+          className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors cursor-pointer"
+        >
+          <Search size={20} />
+        </button>
       </div>
-      {/* botao de login na home
-      <button 
-        type="button" 
-        className="text-gray-600 hover:text-orange-500 transition-colors"
-        onClick={() => console.log('Login functionality will be implemented later')}
-      >
-        <User size={24} />
-      </button> */}
     </form>
   );
 };
-
