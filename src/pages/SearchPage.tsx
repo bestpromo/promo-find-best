@@ -1,10 +1,9 @@
-
 import { SearchBar } from "@/components/SearchBar";
 import { ProductCard } from "@/components/ProductCard";
 import { SearchControls } from "@/components/SearchControls";
 import { FilterSidebar } from "@/components/FilterSidebar";
 import { useSearchParams, Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useProducts, ProductView } from "@/hooks/useProducts";
 
@@ -23,6 +22,13 @@ const SearchPage = () => {
   
   const products = data?.products || [];
   const availableBrands = data?.availableBrands || [];
+
+  // Reset filters when search query changes (for brand navigation)
+  useEffect(() => {
+    setBrandFilter([]);
+    setPriceRange({ min: 0, max: 1000 });
+    setVisibleProducts(PRODUCTS_PER_PAGE);
+  }, [query]);
 
   // Sort products based on selected sorting option
   const sortedProducts = [...products].sort((a, b) => {
@@ -50,6 +56,16 @@ const SearchPage = () => {
     setBrandFilter([]);
     setPriceRange({ min: 0, max: 1000 });
     setVisibleProducts(PRODUCTS_PER_PAGE);
+  };
+
+  const handleBrandFilterChange = (brands: string[]) => {
+    setBrandFilter(brands);
+    setVisibleProducts(PRODUCTS_PER_PAGE); // Reset pagination when filter changes
+  };
+
+  const handlePriceRangeChange = (range: { min: number; max: number }) => {
+    setPriceRange(range);
+    setVisibleProducts(PRODUCTS_PER_PAGE); // Reset pagination when filter changes
   };
 
   const productsToShow = sortedProducts.slice(0, visibleProducts);
@@ -84,8 +100,8 @@ const SearchPage = () => {
         <div className="flex gap-6">
           {/* Filter Sidebar */}
           <FilterSidebar
-            onBrandChange={setBrandFilter}
-            onPriceRangeChange={setPriceRange}
+            onBrandChange={handleBrandFilterChange}
+            onPriceRangeChange={handlePriceRangeChange}
             onClearFilters={handleClearFilters}
             availableBrands={availableBrands}
           />
