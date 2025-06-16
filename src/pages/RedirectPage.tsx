@@ -81,7 +81,7 @@ const RedirectPage = () => {
         {/* Mensagem de redirecionamento */}
         <div className="mb-8">
           <p className="text-lg text-gray-700 mb-2">
-            Estamos redirecionando você para a loja parceira em {countdown}...
+            Estamos redirecionando você para a loja parceira em <span className="font-bold text-orange-500">{countdown}</span>...
           </p>
           {title && (
             <p className="text-sm text-gray-500 mb-1">
