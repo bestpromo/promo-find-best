@@ -80,20 +80,27 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
 
         console.log('Transformed data:', transformedData);
 
-        // Extract unique brands from search results for dynamic filtering
+        // Extract unique brands from ALL search results for dynamic filtering (before any client-side filtering)
         const availableBrands = [...new Set(transformedData.map(product => product.brand_name))]
           .filter(brand => brand && brand !== 'Unknown Store')
           .sort();
 
-        // Apply client-side filtering for better performance
+        // Apply client-side filtering 
         let filteredProducts = transformedData;
 
         // Apply brand filter if provided
         if (brandFilter && brandFilter.length > 0) {
-          filteredProducts = filteredProducts.filter(product => 
-            brandFilter.includes(product.brand_name)
-          );
+          console.log('Applying brand filter:', brandFilter);
+          console.log('Products before brand filter:', filteredProducts.map(p => ({ title: p.title, brand: p.brand_name })));
+          
+          filteredProducts = filteredProducts.filter(product => {
+            const matches = brandFilter.includes(product.brand_name);
+            console.log(`Product "${product.title}" with brand "${product.brand_name}" matches filter:`, matches);
+            return matches;
+          });
+          
           console.log('After brand filter:', filteredProducts.length);
+          console.log('Filtered products:', filteredProducts.map(p => ({ title: p.title, brand: p.brand_name })));
         }
 
         // Apply price range filter if provided
