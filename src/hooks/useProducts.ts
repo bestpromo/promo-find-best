@@ -33,7 +33,7 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
         let query = supabase
           .from('offer_search')
           .select('*')
-          .limit(1500);
+          .limit(1000);
 
         if (searchQuery) {
           const searchTerms = searchQuery.trim().split(/\s+/);
@@ -41,7 +41,7 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
           if (searchTerms.length > 0) {
             // Using correct field names from the offer_search view
             const filters = searchTerms.map(term => 
-              `title.ilike.%${term}%,store_name.ilike.%${term}%,brand_name.ilike.%${term}%`
+              `title.ilike.%${term}%`
             );
             
             query = query.or(filters.join(','));
