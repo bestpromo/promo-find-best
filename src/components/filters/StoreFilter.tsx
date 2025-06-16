@@ -44,7 +44,7 @@ export const StoreFilter = ({
   console.log('orderedStores length:', orderedStores.length);
 
   return (
-    <FilterSection title="Loja" selectedCount={selectedStores.length}>
+    <FilterSection title="Parceiros" selectedCount={selectedStores.length} className="h-48">
       {orderedStores.length > 0 ? (
         orderedStores.map((store) => {
           const isSelected = selectedStores.includes(store);
@@ -64,7 +64,7 @@ export const StoreFilter = ({
         })
       ) : (
         <div>
-          <p className="text-sm text-gray-500 p-2">Nenhuma loja encontrada</p>
+          <p className="text-sm text-gray-500 p-2">Nenhum parceiro encontrado</p>
           <p className="text-xs text-red-500 p-2">Debug: availableStores = {availableStores.length}</p>
         </div>
       )}

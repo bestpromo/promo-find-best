@@ -47,7 +47,7 @@ export const BrandFilter = ({
   const orderedBrands = getOrderedBrands();
 
   return (
-    <FilterSection title="Marca" selectedCount={selectedBrands.length}>
+    <FilterSection title="Marcas" selectedCount={selectedBrands.length}>
       {orderedBrands.length > 0 ? (
         orderedBrands.map((brand) => {
           const isSelected = selectedBrands.includes(brand);
