@@ -24,13 +24,18 @@ export const useProducts = (
         const maxRecords = 500;
         const limitedPageSize = Math.min(pageSize, maxRecords);
 
-        // Helper function to apply all filters to a query
-        const applyFilters = (query: any) => {
-          // Apply search filter
+        // Helper function to apply search filter only (for counts and filters)
+        const applySearchFilter = (query: any) => {
           if (searchQuery && searchQuery.trim()) {
             console.log('Applying search filter for:', searchQuery);
             query = query.ilike('title', `%${searchQuery.trim()}%`);
           }
+          return query;
+        };
+
+        // Helper function to apply all filters to a query
+        const applyAllFilters = (query: any) => {
+          query = applySearchFilter(query);
 
           // Apply brand filter
           if (brandFilter && brandFilter.length > 0) {
@@ -53,9 +58,37 @@ export const useProducts = (
           return query;
         };
 
-        // Get data with all filters applied - simplified approach
+        // 1. Get real total count for search term only (not filtered)
+        console.log('Getting real total count for search term...');
+        let totalCountQuery = supabase
+          .from('offer_search')
+          .select('*', { count: 'exact', head: true });
+        
+        totalCountQuery = applySearchFilter(totalCountQuery);
+        const { count: realTotalCount, error: countError } = await totalCountQuery;
+
+        if (countError) {
+          console.error('Total count query failed:', countError);
+        }
+
+        console.log('Real total count for search term:', realTotalCount);
+
+        // 2. Get available filters based on search term only (all products matching search)
+        console.log('Getting available filters for all search results...');
+        let filtersQuery = supabase.from('offer_search').select('brand_name, store_name, sale_price').limit(5000);
+        filtersQuery = applySearchFilter(filtersQuery);
+
+        const filtersResult = await filtersQuery;
+        const { availableBrands, availableStores } = extractUniqueFilters(filtersResult.data || []);
+
+        console.log('Available filters from all search results:', {
+          brands: availableBrands.length,
+          stores: availableStores.length
+        });
+
+        // 3. Get data with all filters applied (for current page)
         let dataQuery = supabase.from('offer_search').select('*');
-        dataQuery = applyFilters(dataQuery);
+        dataQuery = applyAllFilters(dataQuery);
 
         // Apply sorting
         switch (sortBy) {
@@ -90,33 +123,26 @@ export const useProducts = (
 
         if (dataResult.error) {
           console.error('Data query failed:', dataResult.error);
-          return { products: [], totalCount: 0, hasMore: false, availableBrands: [], availableStores: [] };
+          return { 
+            products: [], 
+            totalCount: realTotalCount || 0, 
+            hasMore: false, 
+            availableBrands, 
+            availableStores 
+          };
         }
 
         // Transform products
         const products: ProductView[] = (dataResult.data || []).map(transformProductData);
         console.log('Transformed products:', products.length);
 
-        // Get available filters based on search only (simplified query)
-        let filtersQuery = supabase.from('offer_search').select('brand_name, store_name').limit(1000);
-        if (searchQuery && searchQuery.trim()) {
-          filtersQuery = filtersQuery.ilike('title', `%${searchQuery.trim()}%`);
-        }
-
-        const filtersResult = await filtersQuery;
-        const { availableBrands, availableStores } = extractUniqueFilters(filtersResult.data || []);
-
-        // Estimate total count based on returned data
-        // If we got less than requested, we're likely at the end
-        const estimatedTotalCount = products.length < limitedPageSize ? 
-          ((page - 1) * limitedPageSize) + products.length :
-          ((page - 1) * limitedPageSize) + products.length + limitedPageSize;
-
-        const hasMore = products.length === limitedPageSize;
+        // Calculate hasMore based on real total vs current position
+        const currentPosition = (page - 1) * limitedPageSize + products.length;
+        const hasMore = products.length === limitedPageSize && currentPosition < (realTotalCount || 0);
 
         const result = {
           products,
-          totalCount: estimatedTotalCount,
+          totalCount: realTotalCount || 0, // Use real count from database
           hasMore,
           availableBrands,
           availableStores
@@ -124,7 +150,7 @@ export const useProducts = (
 
         console.log('=== FINAL RESULT ===');
         console.log('Products returned:', result.products.length);
-        console.log('Estimated total count:', result.totalCount);
+        console.log('Real total count:', result.totalCount);
         console.log('Has more:', result.hasMore);
         console.log('Available brands:', result.availableBrands.length);
         console.log('Available stores:', result.availableStores.length);

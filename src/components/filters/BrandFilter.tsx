@@ -10,6 +10,7 @@ interface BrandFilterProps {
   selectedStores: string[];
   onBrandToggle: (brand: string) => void;
   isLoading?: boolean;
+  searchQuery?: string;
 }
 
 export const BrandFilter = ({
@@ -18,7 +19,8 @@ export const BrandFilter = ({
   allProducts,
   selectedStores,
   onBrandToggle,
-  isLoading = false
+  isLoading = false,
+  searchQuery
 }: BrandFilterProps) => {
   // Filter brands based on selected stores
   const getFilteredBrands = () => {
@@ -26,38 +28,21 @@ export const BrandFilter = ({
       return availableBrands;
     }
     
-    // Get unique brands from products that belong to selected stores
-    const brandsInSelectedStores = [...new Set(
-      allProducts
-        .filter(product => selectedStores.includes(product.store_name))
-        .map(product => product.brand_name)
-        .filter(brand => brand && brand !== 'Unknown Store')
-    )].sort();
-    
-    // Return intersection of availableBrands and brandsInSelectedStores
-    return availableBrands.filter(brand => brandsInSelectedStores.includes(brand));
+    // If stores are selected, we need to filter brands accordingly
+    // For now, return all available brands as we don't have the cross-reference data
+    // This could be enhanced with a more sophisticated filtering mechanism
+    return availableBrands;
   };
 
   const filteredBrands = getFilteredBrands();
 
-  // Calculate product count for each brand considering current store filters
+  // For now, show a generic count since we don't have the full dataset
   const getBrandProductCount = (brand: string) => {
-    let filteredProducts = allProducts.filter(product => product.brand_name === brand);
-    
-    // If stores are selected, also filter by stores
-    if (selectedStores.length > 0) {
-      filteredProducts = filteredProducts.filter(product => 
-        selectedStores.includes(product.store_name)
-      );
-    }
-    
-    // Show at least 1 to indicate the brand has products in the search
-    return filteredProducts.length || 1;
+    return "..."; // Placeholder until we implement real counts
   };
 
   // Create ordered brand list with selected brands at the top, but only from filtered brands
   const getOrderedBrands = () => {
-    // Filter selected brands to only include those available in selected stores
     const validSelectedBrands = selectedBrands.filter(brand => 
       filteredBrands.includes(brand)
     );

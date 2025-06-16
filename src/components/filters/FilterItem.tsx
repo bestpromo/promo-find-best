@@ -6,7 +6,7 @@ interface FilterItemProps {
   id: string;
   label: string;
   isSelected: boolean;
-  productCount: number;
+  productCount: number | string;
   onToggle: () => void;
   selectedIndex?: number;
   color?: 'blue' | 'green';
