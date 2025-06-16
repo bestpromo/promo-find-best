@@ -110,13 +110,14 @@ export const createFiltersQuery = (filters: ProductFilters) => {
   
   console.log('Creating filters query for search:', searchQuery);
   
-  let baseQuery = supabase.from('offer_search').select('brand_name, store_name');
+  let baseQuery = supabase.from('offer_search');
   
-  // Apply search filter if exists
+  // Apply search filter if exists BEFORE select
   if (searchQuery && searchQuery.trim()) {
     const searchTerm = searchQuery.trim().toLowerCase();
     baseQuery = baseQuery.ilike('title', `%${searchTerm}%`);
   }
   
-  return baseQuery;
+  // Apply select AFTER filters
+  return baseQuery.select('brand_name, store_name');
 };
