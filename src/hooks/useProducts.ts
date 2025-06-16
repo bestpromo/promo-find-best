@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type { ProductView, ProductsResponse, ProductFilters } from "@/types/product";
-import { createDataQuery, createFiltersQuery, createTestQuery } from "@/utils/productQueries";
+import { createDataQuery, createFiltersQuery, createTestQuery, createCountQuery } from "@/utils/productQueries";
 import { transformProductData, extractUniqueFilters } from "@/utils/productTransformers";
 
 export const useProducts = (
@@ -50,27 +50,28 @@ export const useProducts = (
 
         // Create queries
         const dataQuery = createDataQuery(filters);
+        const countQuery = createCountQuery(filters);
         const filtersQuery = createFiltersQuery(filters);
 
-        console.log('Executing main data query...');
+        console.log('Executing queries in parallel...');
         
-        // Execute data query
-        const { data, error, count } = await dataQuery;
+        // Execute queries in parallel
+        const [dataResult, countResult, filtersResult] = await Promise.all([
+          dataQuery,
+          countQuery,
+          filtersQuery
+        ]);
 
-        console.log('Data query completed');
-        console.log('- Error:', error);
-        console.log('- Data length:', data?.length || 0);
-        console.log('- Count:', count);
+        console.log('All queries completed');
+        console.log('- Data error:', dataResult.error);
+        console.log('- Data length:', dataResult.data?.length || 0);
+        console.log('- Count error:', countResult.error);
+        console.log('- Real count:', countResult.count);
+        console.log('- Filters error:', filtersResult.error);
+        console.log('- Filters length:', filtersResult.data?.length || 0);
 
-        if (error) {
-          console.error("Supabase query error:", error);
-          console.error("Error details:", {
-            code: error.code,
-            message: error.message,
-            details: error.details,
-            hint: error.hint
-          });
-          
+        if (dataResult.error) {
+          console.error("Data query error:", dataResult.error);
           return { 
             products: [], 
             totalCount: 0, 
@@ -80,43 +81,28 @@ export const useProducts = (
           };
         }
 
-        console.log('Data query successful, processing results...');
-
-        // Try to get filters data
-        let filtersData = null;
-        try {
-          console.log('Executing filters query...');
-          const filtersResult = await filtersQuery;
-          console.log('Filters query result:', {
-            error: filtersResult.error,
-            dataLength: filtersResult.data?.length || 0
-          });
-          
-          if (!filtersResult.error) {
-            filtersData = filtersResult.data;
-          }
-        } catch (filtersError) {
-          console.warn("Filters query failed:", filtersError);
-        }
+        // Get the real total count
+        const realTotalCount = countResult.count || 0;
+        console.log('Real total count from database:', realTotalCount);
 
         // Transform the data
-        const products: ProductView[] = (data || []).map(transformProductData);
+        const products: ProductView[] = (dataResult.data || []).map(transformProductData);
         console.log('Transformed products:', products.length);
 
-        // Extract unique brands and stores
-        const { availableBrands, availableStores } = extractUniqueFilters(filtersData || data);
-        console.log('Extracted filters:', { 
+        // Extract unique brands and stores from filters query
+        const filtersData = filtersResult.error ? [] : (filtersResult.data || []);
+        const { availableBrands, availableStores } = extractUniqueFilters(filtersData);
+        console.log('Extracted filters from', filtersData.length, 'records:', { 
           brandsCount: availableBrands.length, 
           storesCount: availableStores.length 
         });
 
-        // Simple pagination logic
-        const hasMore = products.length === pageSize;
-        const estimatedTotal = hasMore ? (page * pageSize + 1) : ((page - 1) * pageSize + products.length);
+        // Calculate if there are more pages
+        const hasMore = (page * pageSize) < realTotalCount;
 
         const result = { 
           products, 
-          totalCount: estimatedTotal, 
+          totalCount: realTotalCount, 
           hasMore, 
           availableBrands, 
           availableStores 
@@ -124,7 +110,7 @@ export const useProducts = (
 
         console.log('=== FINAL RESULT ===');
         console.log('Products:', result.products.length);
-        console.log('Total count:', result.totalCount);
+        console.log('Real total count:', result.totalCount);
         console.log('Has more:', result.hasMore);
         console.log('Available brands:', result.availableBrands.length);
         console.log('Available stores:', result.availableStores.length);
@@ -143,7 +129,7 @@ export const useProducts = (
       }
     },
     staleTime: 5 * 60 * 1000,
-    retry: 1, // Reduce retries to see errors faster
+    retry: 1,
     retryDelay: 1000,
   });
 };
