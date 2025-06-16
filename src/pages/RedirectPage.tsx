@@ -57,7 +57,7 @@ const RedirectPage = () => {
   };
 
   const { countdown, progress } = useRedirectCountdown({
-    initialCountdown: 3,
+    initialCountdown: 2,
     registrationStatus,
     onComplete: handleRedirect,
     startImmediately: true
