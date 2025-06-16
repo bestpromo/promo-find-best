@@ -31,29 +31,32 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
         let query = supabase
           .from('offer_search')
           .select('*')
-          .limit(1000); // Limiting to 1000 products as requested
+          .limit(1000);
 
         if (searchQuery) {
           const searchTerms = searchQuery.trim().split(/\s+/);
           
           if (searchTerms.length > 0) {
+            // Using correct field names from the offer_search view
             const filters = searchTerms.map(term => 
-              `product_name.ilike.%${term}%,merchant_name.ilike.%${term}%`
+              `name.ilike.%${term}%,store_name.ilike.%${term}%,description.ilike.%${term}%`
             );
             
             query = query.or(filters.join(','));
           }
         }
 
-        // Apply brand filter if provided
+        // Apply brand filter if provided - using store_name instead of merchant_name
         if (brandFilter) {
-          query = query.ilike('merchant_name', `%${brandFilter}%`);
+          query = query.ilike('store_name', `%${brandFilter}%`);
         }
 
         // Apply price range filter if provided
         if (priceRange) {
           query = query.gte('price', priceRange.min).lte('price', priceRange.max);
         }
+
+        console.log('Executing query with filters:', { searchQuery, brandFilter, priceRange });
 
         const { data, error } = await query;
 
@@ -62,31 +65,37 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
           return { products: [], availableBrands: [] };
         }
 
+        console.log('Raw data from offer_search:', data);
+
         // Transform the data to match our ProductView interface
         const transformedData: ProductView[] = (data || []).map((item: any) => ({
           offer_id: item.id || Math.random().toString(),
-          title: item.product_name || item.name || 'Unnamed Product',
+          title: item.name || 'Unnamed Product',
           url_slug: item.url_slug || '',
-          deep_link_url: item.aw_deep_link || item.url || '',
-          brand_name: item.merchant_name || item.store_name || 'Unknown Store',
-          image_url: item.aw_image_url || item.photo || '/placeholder.svg',
+          deep_link_url: item.url || '',
+          brand_name: item.store_name || 'Unknown Store',
+          image_url: item.photo || '/placeholder.svg',
           sale_price: parseFloat(item.price) || null,
-          promotional_price: parseFloat(item.promotional_price) || null,
+          promotional_price: null, // This field might not exist in the view
           // Compatibility properties
           id: item.id || Math.random().toString(),
-          nome: item.product_name || item.name || 'Unnamed Product',
-          description: item.description || `Product from ${item.merchant_name || 'Unknown'}`,
-          url: item.aw_deep_link || item.url || '',
-          photo: item.aw_image_url || item.photo || '/placeholder.svg',
+          nome: item.name || 'Unnamed Product',
+          description: item.description || `Product from ${item.store_name || 'Unknown'}`,
+          url: item.url || '',
+          photo: item.photo || '/placeholder.svg',
           price: parseFloat(item.price) || null,
-          loja_nome: item.merchant_name || item.store_name || 'Unknown Store',
-          category: item.merchant_name || item.store_name || 'Uncategorized'
+          loja_nome: item.store_name || 'Unknown Store',
+          category: item.store_name || 'Uncategorized'
         }));
+
+        console.log('Transformed data:', transformedData);
 
         // Extract unique brands from the results
         const availableBrands = [...new Set(transformedData.map(product => product.brand_name))]
           .filter(brand => brand && brand !== 'Unknown Store')
           .sort();
+
+        console.log('Available brands:', availableBrands);
 
         return { products: transformedData, availableBrands };
 
