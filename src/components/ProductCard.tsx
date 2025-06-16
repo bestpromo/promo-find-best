@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ExternalLink } from "lucide-react";
@@ -91,9 +90,9 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
     product.deep_link_url : 
     product.url;
 
-  // Get store name - for Supabase products, prioritize advertiser_name as the actual store name
+  // Get store name - for Supabase products, use store_name as the actual store name
   const storeName = isSupabaseProduct ? 
-    (product.advertiser_name || 'Loja Desconhecida') : 
+    (product.store_name || 'Loja Desconhecida') : 
     'Loja Online';
 
   // Helper function to format price with different font sizes for cents

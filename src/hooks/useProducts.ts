@@ -9,7 +9,8 @@ export type ProductView = {
   url_slug: string;
   deep_link_url: string;
   brand_name: string;
-  advertiser_name: string; // Add this missing property
+  advertiser_name: string;
+  store_name: string; // Add store_name field
   image_url: string;
   sale_price: number | null;
   promotional_price: number | null;
@@ -66,7 +67,8 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
           url_slug: item.url_slug || '',
           deep_link_url: item.deep_link_url || '',
           brand_name: item.brand_name || 'Unknown Store',
-          advertiser_name: item.advertiser_name || '', // Add this property mapping
+          advertiser_name: item.advertiser_name || '',
+          store_name: item.store_name || '', // Add store_name mapping
           image_url: item.image_url || '/placeholder.svg',
           sale_price: parseFloat(item.sale_price) || null,
           promotional_price: parseFloat(item.promotional_price) || null,
@@ -77,7 +79,7 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
           url: item.deep_link_url || '',
           photo: item.image_url || '/placeholder.svg',
           price: parseFloat(item.sale_price) || null,
-          loja_nome: item.brand_name || 'Unknown Store',
+          loja_nome: item.store_name || item.brand_name || 'Unknown Store', // Use store_name for loja_nome
           category: item.brand_name || 'Uncategorized'
         }));
 
