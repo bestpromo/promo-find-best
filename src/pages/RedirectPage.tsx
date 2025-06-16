@@ -46,6 +46,13 @@ const RedirectPage = () => {
   const registerClick = async () => {
     try {
       console.log('Registrando clique para offer_id:', offerId);
+      console.log('Dados que serão enviados:', {
+        offer_id: offerId,
+        clicked_at: new Date().toISOString(),
+        user_ip: '',
+        user_agent: navigator.userAgent,
+        referrer_url: window.location.origin
+      });
       
       const { data, error } = await supabase
         .from('catalog_offer_click')
@@ -60,6 +67,7 @@ const RedirectPage = () => {
 
       if (error) {
         console.error('Erro ao registrar clique:', error);
+        console.error('Detalhes do erro:', JSON.stringify(error, null, 2));
       } else {
         console.log('Clique registrado com sucesso:', data);
       }
@@ -94,7 +102,7 @@ const RedirectPage = () => {
         {/* Mensagem de redirecionamento */}
         <div className="mb-8">
           <p className="text-lg text-gray-700 mb-2">
-            Estamos redirecionando você para a loja parceira em <span className="font-bold text-orange-500">{countdown} segundos</span>...
+            Estamos redirecionando você para a loja parceira em ({countdown > 0 ? countdown : '0'}...)
           </p>
           {title && (
             <p className="text-sm text-gray-500 mb-1">
