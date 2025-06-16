@@ -15,7 +15,7 @@ const SearchPage = () => {
   const [sortBy, setSortBy] = useState<string>('nome-asc');
   const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
   const [visibleProducts, setVisibleProducts] = useState(PRODUCTS_PER_PAGE);
-  const [brandFilter, setBrandFilter] = useState<string>("");
+  const [brandFilter, setBrandFilter] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 1000 });
   
   const query = searchParams.get("q") || "";
@@ -47,7 +47,7 @@ const SearchPage = () => {
   };
 
   const handleClearFilters = () => {
-    setBrandFilter("");
+    setBrandFilter([]);
     setPriceRange({ min: 0, max: 1000 });
     setVisibleProducts(PRODUCTS_PER_PAGE);
   };
@@ -101,7 +101,7 @@ const SearchPage = () => {
                 <div className="mb-4">
                   <p className="text-sm text-gray-600">
                     {sortedProducts.length} produtos encontrados
-                    {brandFilter && ` • Marca: ${brandFilter}`}
+                    {brandFilter.length > 0 && ` • Marcas: ${brandFilter.join(', ')}`}
                     {(priceRange.min > 0 || priceRange.max < 1000) && 
                       ` • Preço: R$ ${priceRange.min} - R$ ${priceRange.max}`
                     }

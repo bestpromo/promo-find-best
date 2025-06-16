@@ -23,7 +23,7 @@ export type ProductView = {
   category: string;
 };
 
-export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: string, priceRange?: { min: number; max: number }) => {
+export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: string[], priceRange?: { min: number; max: number }) => {
   return useQuery({
     queryKey: ["products", searchQuery, sortBy, brandFilter, priceRange],
     queryFn: async () => {
@@ -44,16 +44,6 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
             
             query = query.or(filters.join(','));
           }
-        }
-
-        // Apply brand filter if provided
-        if (brandFilter) {
-          query = query.ilike('brand_name', `%${brandFilter}%`);
-        }
-
-        // Apply price range filter if provided
-        if (priceRange) {
-          query = query.gte('sale_price', priceRange.min).lte('sale_price', priceRange.max);
         }
 
         console.log('Executing query with filters:', { searchQuery, brandFilter, priceRange });
@@ -90,14 +80,33 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
 
         console.log('Transformed data:', transformedData);
 
-        // Extract unique brands from the results
+        // Extract unique brands from all results (not filtered)
         const availableBrands = [...new Set(transformedData.map(product => product.brand_name))]
           .filter(brand => brand && brand !== 'Unknown Store')
           .sort();
 
-        console.log('Available brands:', availableBrands);
+        // Apply client-side filtering
+        let filteredProducts = transformedData;
 
-        return { products: transformedData, availableBrands };
+        // Apply brand filter if provided
+        if (brandFilter && brandFilter.length > 0) {
+          filteredProducts = filteredProducts.filter(product => 
+            brandFilter.includes(product.brand_name)
+          );
+        }
+
+        // Apply price range filter if provided
+        if (priceRange) {
+          filteredProducts = filteredProducts.filter(product => {
+            const price = product.sale_price || 0;
+            return price >= priceRange.min && price <= priceRange.max;
+          });
+        }
+
+        console.log('Available brands:', availableBrands);
+        console.log('Filtered products:', filteredProducts);
+
+        return { products: filteredProducts, availableBrands };
 
       } catch (fallbackError) {
         console.error("Error in products query:", fallbackError);

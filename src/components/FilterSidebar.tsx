@@ -6,22 +6,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface FilterSidebarProps {
-  onBrandChange: (brand: string) => void;
+  onBrandChange: (brands: string[]) => void;
   onPriceRangeChange: (range: { min: number; max: number }) => void;
   onClearFilters: () => void;
   availableBrands: string[];
 }
 
 export const FilterSidebar = ({ onBrandChange, onPriceRangeChange, onClearFilters, availableBrands }: FilterSidebarProps) => {
-  const [selectedBrand, setSelectedBrand] = useState("");
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState([0, 1000]);
 
-  const handleBrandSelect = (brand: string) => {
-    const newBrand = selectedBrand === brand ? "" : brand;
-    setSelectedBrand(newBrand);
-    onBrandChange(newBrand);
+  const handleBrandToggle = (brand: string) => {
+    const newSelectedBrands = selectedBrands.includes(brand)
+      ? selectedBrands.filter(b => b !== brand)
+      : [...selectedBrands, brand];
+    
+    setSelectedBrands(newSelectedBrands);
+    onBrandChange(newSelectedBrands);
   };
 
   const handlePriceChange = (values: number[]) => {
@@ -30,7 +34,7 @@ export const FilterSidebar = ({ onBrandChange, onPriceRangeChange, onClearFilter
   };
 
   const handleClearFilters = () => {
-    setSelectedBrand("");
+    setSelectedBrands([]);
     setPriceRange([0, 1000]);
     onClearFilters();
   };
@@ -52,25 +56,29 @@ export const FilterSidebar = ({ onBrandChange, onPriceRangeChange, onClearFilter
         <CardContent className="space-y-6">
           {/* Brand Filter */}
           <div>
-            <Label className="text-sm font-medium mb-3 block">Marca</Label>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {availableBrands.length > 0 ? (
-                availableBrands.map((brand) => (
-                  <div key={brand} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={brand}
-                      checked={selectedBrand === brand}
-                      onCheckedChange={() => handleBrandSelect(brand)}
-                    />
-                    <Label htmlFor={brand} className="text-sm cursor-pointer">
-                      {brand}
-                    </Label>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-gray-500">Nenhuma marca encontrada</p>
-              )}
-            </div>
+            <Label className="text-sm font-medium mb-3 block">
+              Marca {selectedBrands.length > 0 && `(${selectedBrands.length} selecionadas)`}
+            </Label>
+            <ScrollArea className="h-80 w-full rounded-md border p-2">
+              <div className="space-y-2">
+                {availableBrands.length > 0 ? (
+                  availableBrands.map((brand) => (
+                    <div key={brand} className="flex items-center space-x-2 p-1">
+                      <Checkbox
+                        id={brand}
+                        checked={selectedBrands.includes(brand)}
+                        onCheckedChange={() => handleBrandToggle(brand)}
+                      />
+                      <Label htmlFor={brand} className="text-sm cursor-pointer flex-1">
+                        {brand}
+                      </Label>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500 p-2">Nenhuma marca encontrada</p>
+                )}
+              </div>
+            </ScrollArea>
           </div>
 
           {/* Price Range Filter */}
