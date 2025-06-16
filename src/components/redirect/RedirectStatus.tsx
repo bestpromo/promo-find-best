@@ -16,14 +16,6 @@ export const RedirectStatus = ({ registrationStatus, offerId }: RedirectStatusPr
             <p className="text-yellow-600 font-medium">Registrando clique...</p>
           </div>
         )}
-        {registrationStatus === 'success' && (
-          <div className="flex items-center space-x-2">
-            <div className="h-4 w-4 bg-green-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs">✓</span>
-            </div>
-            <p className="text-green-600 font-medium">Clique registrado com sucesso!</p>
-          </div>
-        )}
         {registrationStatus === 'error' && (
           <div className="flex items-center space-x-2">
             <div className="h-4 w-4 bg-red-500 rounded-full flex items-center justify-center">

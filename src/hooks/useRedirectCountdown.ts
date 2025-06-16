@@ -21,14 +21,19 @@ export const useRedirectCountdown = ({
   useEffect(() => {
     if (!startImmediately) return;
 
+    console.log('Iniciando countdown de', initialCountdown, 'segundos');
+    
     const interval = setInterval(() => {
       setCountdown((prev) => {
         const newCountdown = prev - 1;
-        setProgress((initialCountdown - newCountdown) * (100 / initialCountdown));
+        const newProgress = ((initialCountdown - newCountdown) / initialCountdown) * 100;
+        setProgress(newProgress);
+        
+        console.log('Countdown:', newCountdown, 'Progress:', newProgress);
         
         if (newCountdown <= 0) {
           clearInterval(interval);
-          console.log('Countdown finalizado, iniciando redirecionamento...');
+          console.log('Countdown finalizado, executando redirecionamento...');
           onComplete();
           return 0;
         }
@@ -37,7 +42,10 @@ export const useRedirectCountdown = ({
       });
     }, 1000);
 
-    return () => clearInterval(interval);
+    return () => {
+      console.log('Limpando intervalo do countdown');
+      clearInterval(interval);
+    };
   }, [initialCountdown, onComplete, startImmediately]);
 
   return {

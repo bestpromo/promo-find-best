@@ -20,7 +20,7 @@ const RedirectPage = () => {
 
   const handleRedirect = () => {
     try {
-      console.log('=== INICIANDO REDIRECIONAMENTO ===');
+      console.log('=== EXECUTANDO REDIRECIONAMENTO ===');
       console.log('deepLinkUrl:', deepLinkUrl);
       console.log('Status do registro:', registrationStatus);
       
@@ -41,7 +41,8 @@ const RedirectPage = () => {
   const { countdown, progress } = useRedirectCountdown({
     initialCountdown: 3,
     registrationStatus,
-    onComplete: handleRedirect
+    onComplete: handleRedirect,
+    startImmediately: true
   });
 
   useEffect(() => {
