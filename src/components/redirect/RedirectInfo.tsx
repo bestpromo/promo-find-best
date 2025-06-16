@@ -1,4 +1,6 @@
 
+import { ProductPartnerInfo } from "../ProductPartnerInfo";
+
 interface RedirectInfoProps {
   countdown: number;
   title?: string | null;
@@ -18,9 +20,12 @@ export const RedirectInfo = ({ countdown, title, brandName, price }: RedirectInf
         </p>
       )}
       {brandName && (
-        <p className="text-sm text-gray-500 mb-1">
-          Parceiro: {brandName}
-        </p>
+        <>
+          <p className="text-sm text-gray-500 mb-1">
+            Parceiro: {brandName}
+          </p>
+          <ProductPartnerInfo storeName={brandName} />
+        </>
       )}
       {price && (
         <p className="text-sm text-orange-500 font-semibold">
