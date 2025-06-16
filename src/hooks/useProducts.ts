@@ -39,21 +39,21 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
           if (searchTerms.length > 0) {
             // Using correct field names from the offer_search view
             const filters = searchTerms.map(term => 
-              `name.ilike.%${term}%,store_name.ilike.%${term}%,description.ilike.%${term}%`
+              `title.ilike.%${term}%,brand_name.ilike.%${term}%`
             );
             
             query = query.or(filters.join(','));
           }
         }
 
-        // Apply brand filter if provided - using store_name instead of merchant_name
+        // Apply brand filter if provided
         if (brandFilter) {
-          query = query.ilike('store_name', `%${brandFilter}%`);
+          query = query.ilike('brand_name', `%${brandFilter}%`);
         }
 
         // Apply price range filter if provided
         if (priceRange) {
-          query = query.gte('price', priceRange.min).lte('price', priceRange.max);
+          query = query.gte('sale_price', priceRange.min).lte('sale_price', priceRange.max);
         }
 
         console.log('Executing query with filters:', { searchQuery, brandFilter, priceRange });
@@ -69,23 +69,23 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
 
         // Transform the data to match our ProductView interface
         const transformedData: ProductView[] = (data || []).map((item: any) => ({
-          offer_id: item.id || Math.random().toString(),
-          title: item.name || 'Unnamed Product',
+          offer_id: item.offer_id || Math.random().toString(),
+          title: item.title || 'Unnamed Product',
           url_slug: item.url_slug || '',
-          deep_link_url: item.url || '',
-          brand_name: item.store_name || 'Unknown Store',
-          image_url: item.photo || '/placeholder.svg',
-          sale_price: parseFloat(item.price) || null,
-          promotional_price: null, // This field might not exist in the view
+          deep_link_url: item.deep_link_url || '',
+          brand_name: item.brand_name || 'Unknown Store',
+          image_url: item.image_url || '/placeholder.svg',
+          sale_price: parseFloat(item.sale_price) || null,
+          promotional_price: parseFloat(item.promotional_price) || null,
           // Compatibility properties
-          id: item.id || Math.random().toString(),
-          nome: item.name || 'Unnamed Product',
-          description: item.description || `Product from ${item.store_name || 'Unknown'}`,
-          url: item.url || '',
-          photo: item.photo || '/placeholder.svg',
-          price: parseFloat(item.price) || null,
-          loja_nome: item.store_name || 'Unknown Store',
-          category: item.store_name || 'Uncategorized'
+          id: item.offer_id || Math.random().toString(),
+          nome: item.title || 'Unnamed Product',
+          description: `Product from ${item.brand_name || 'Unknown'}`,
+          url: item.deep_link_url || '',
+          photo: item.image_url || '/placeholder.svg',
+          price: parseFloat(item.sale_price) || null,
+          loja_nome: item.brand_name || 'Unknown Store',
+          category: item.brand_name || 'Uncategorized'
         }));
 
         console.log('Transformed data:', transformedData);
