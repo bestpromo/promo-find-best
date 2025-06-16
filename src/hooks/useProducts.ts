@@ -30,14 +30,13 @@ export const useProducts = (
 
         // Create queries
         const dataQuery = createDataQuery(filters);
-        const countQuery = createCountQuery(filters);
         const filtersQuery = createFiltersQuery(filters);
 
-        // Execute queries
-        console.log('Executing queries...');
-        const [{ data, error }, { count, error: countError }, { data: filtersData, error: filtersError }] = await Promise.all([
+        console.log('Executing data and filters queries...');
+        
+        // Execute data and filters queries first (skip count for now to avoid timeouts)
+        const [{ data, error }, { data: filtersData, error: filtersError }] = await Promise.all([
           dataQuery,
-          countQuery,
           filtersQuery
         ]);
 
@@ -52,15 +51,11 @@ export const useProducts = (
           };
         }
 
-        if (countError) {
-          console.warn("Error fetching count:", countError);
-        }
-
         if (filtersError) {
           console.warn("Error fetching filters:", filtersError);
         }
 
-        console.log('Query results:', { dataLength: data?.length, count, filtersDataLength: filtersData?.length });
+        console.log('Query results:', { dataLength: data?.length, filtersDataLength: filtersData?.length });
 
         // Transform the data
         const products: ProductView[] = (data || []).map(transformProductData);
@@ -68,13 +63,14 @@ export const useProducts = (
         // Extract unique brands and stores
         const { availableBrands, availableStores } = extractUniqueFilters(filtersData);
 
-        const totalCount = count || 0;
-        const from = (page - 1) * pageSize;
-        const hasMore = (from + products.length) < totalCount;
+        // For now, estimate total count based on returned data to avoid timeout issues
+        // If we get a full page, assume there might be more
+        const hasMore = products.length === pageSize;
+        const estimatedTotal = hasMore ? (page * pageSize) + 1 : (page - 1) * pageSize + products.length;
 
         console.log('Final results:', { 
           productsCount: products.length, 
-          totalCount, 
+          estimatedTotal, 
           hasMore, 
           availableBrandsCount: availableBrands.length,
           availableStoresCount: availableStores.length 
@@ -82,7 +78,7 @@ export const useProducts = (
 
         return { 
           products, 
-          totalCount, 
+          totalCount: estimatedTotal, 
           hasMore, 
           availableBrands, 
           availableStores 

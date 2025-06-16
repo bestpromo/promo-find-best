@@ -6,13 +6,12 @@ export const createBaseQuery = (filters: ProductFilters) => {
   const { searchQuery, brandFilter, storeFilter, priceRange } = filters;
   let query = supabase.from('offer_search').select('*');
   
-  // Apply search filter
+  // Apply search filter - use simpler ilike pattern for better performance
   if (searchQuery) {
-    const searchTerms = searchQuery.trim().split(/\s+/);
-    if (searchTerms.length > 0) {
-      // Use individual ilike conditions combined with or
-      const searchConditions = searchTerms.map(term => `title.ilike.%${term}%`).join(',');
-      query = query.or(searchConditions);
+    const searchTerm = searchQuery.trim();
+    if (searchTerm) {
+      // Use single ilike instead of multiple or conditions for better performance
+      query = query.ilike('title', `%${searchTerm}%`);
     }
   }
 
@@ -65,12 +64,11 @@ export const createCountQuery = (filters: ProductFilters) => {
   const { searchQuery, brandFilter, storeFilter, priceRange } = filters;
   let countQuery = supabase.from('offer_search').select('*', { count: 'exact', head: true });
   
-  // Apply the same filters to count query
+  // Apply the same filters to count query - use simpler search pattern
   if (searchQuery) {
-    const searchTerms = searchQuery.trim().split(/\s+/);
-    if (searchTerms.length > 0) {
-      const searchConditions = searchTerms.map(term => `title.ilike.%${term}%`).join(',');
-      countQuery = countQuery.or(searchConditions);
+    const searchTerm = searchQuery.trim();
+    if (searchTerm) {
+      countQuery = countQuery.ilike('title', `%${searchTerm}%`);
     }
   }
 
@@ -93,13 +91,11 @@ export const createFiltersQuery = (filters: ProductFilters) => {
   const { searchQuery } = filters;
   let filtersQuery = supabase.from('offer_search').select('brand_name, store_name');
   
-  // Only apply search filter to filters query, not brand/store/price filters
-  // This ensures we show all available options for the current search
+  // Only apply search filter to filters query - use simpler search pattern
   if (searchQuery) {
-    const searchTerms = searchQuery.trim().split(/\s+/);
-    if (searchTerms.length > 0) {
-      const searchConditions = searchTerms.map(term => `title.ilike.%${term}%`).join(',');
-      filtersQuery = filtersQuery.or(searchConditions);
+    const searchTerm = searchQuery.trim();
+    if (searchTerm) {
+      filtersQuery = filtersQuery.ilike('title', `%${searchTerm}%`);
     }
   }
 
