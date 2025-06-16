@@ -1,4 +1,3 @@
-
 import { SearchBar } from "@/components/SearchBar";
 import { ProductCard } from "@/components/ProductCard";
 import { SearchControls } from "@/components/SearchControls";
@@ -36,11 +35,31 @@ const SearchPage = () => {
     setVisibleProducts(PRODUCTS_PER_PAGE);
   }, [query]);
 
-  // Sort products based on selected sorting option
+  // Helper function to check if product has image
+  const hasValidImage = (product: ProductView) => {
+    const isSupabaseProduct = 'offer_id' in product;
+    const imageUrl = isSupabaseProduct ? product.image_url : product.image;
+    
+    // Consider image invalid if it's empty, null, undefined, or placeholder
+    return imageUrl && 
+           imageUrl !== '/placeholder.svg' && 
+           imageUrl.trim() !== '' &&
+           imageUrl !== 'placeholder.svg';
+  };
+
+  // Sort products based on selected sorting option and image availability
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     const productA = a as ProductView;
     const productB = b as ProductView;
     
+    // First, sort by image availability (products with images first)
+    const aHasImage = hasValidImage(productA);
+    const bHasImage = hasValidImage(productB);
+    
+    if (aHasImage && !bHasImage) return -1; // A has image, B doesn't - A comes first
+    if (!aHasImage && bHasImage) return 1;  // B has image, A doesn't - B comes first
+    
+    // If both have images or both don't have images, sort by the selected criterion
     switch (sortBy) {
       case 'price-desc':
         return (productB.sale_price || 0) - (productA.sale_price || 0);
