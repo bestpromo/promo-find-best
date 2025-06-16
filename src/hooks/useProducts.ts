@@ -45,45 +45,37 @@ export const useProducts = (
     queryKey: ["products", searchQuery, sortBy, page, pageSize, brandFilter, priceRange, storeFilter],
     queryFn: async (): Promise<ProductsResponse> => {
       try {
-        // First, get total count and available filters
-        let countQuery = supabase
-          .from('offer_search')
-          .select('*', { count: 'exact', head: false });
+        console.log('Fetching products with params:', { searchQuery, sortBy, page, pageSize, brandFilter, priceRange, storeFilter });
 
+        // Create a more efficient query strategy
         let dataQuery = supabase
           .from('offer_search')
           .select('*');
 
-        // Apply search filter
+        // Apply search filter first to reduce dataset
         if (searchQuery) {
           const searchTerms = searchQuery.trim().split(/\s+/);
           
           if (searchTerms.length > 0) {
-            const filters = searchTerms.map(term => 
-              `title.ilike.%${term}%,store_name.ilike.%${term}%`
-            );
+            // Use a more efficient search approach
+            const searchFilter = searchTerms.map(term => 
+              `title.ilike.%${term}%`
+            ).join(',');
             
-            const searchFilter = filters.join(',');
-            countQuery = countQuery.or(searchFilter);
             dataQuery = dataQuery.or(searchFilter);
           }
         }
 
-        // Apply brand filter
+        // Apply filters before sorting to reduce dataset
         if (brandFilter && brandFilter.length > 0) {
-          countQuery = countQuery.in('brand_name', brandFilter);
           dataQuery = dataQuery.in('brand_name', brandFilter);
         }
 
-        // Apply store filter
         if (storeFilter && storeFilter.length > 0) {
-          countQuery = countQuery.in('store_name', storeFilter);
           dataQuery = dataQuery.in('store_name', storeFilter);
         }
 
-        // Apply price range filter
         if (priceRange && (priceRange.min > 0 || priceRange.max < 1000)) {
-          countQuery = countQuery.gte('sale_price', priceRange.min).lte('sale_price', priceRange.max);
           dataQuery = dataQuery.gte('sale_price', priceRange.min).lte('sale_price', priceRange.max);
         }
 
@@ -104,19 +96,49 @@ export const useProducts = (
             break;
         }
 
-        // Apply pagination
+        // Apply pagination with limit to prevent timeout
         const from = (page - 1) * pageSize;
         const to = from + pageSize - 1;
         dataQuery = dataQuery.range(from, to);
 
+        // For total count, use a simpler approach with limit
+        let countQuery = supabase
+          .from('offer_search')
+          .select('offer_id', { count: 'exact', head: true })
+          .limit(5000); // Limit total count query to prevent timeout
+
+        // Apply same filters to count query
+        if (searchQuery) {
+          const searchTerms = searchQuery.trim().split(/\s+/);
+          if (searchTerms.length > 0) {
+            const searchFilter = searchTerms.map(term => 
+              `title.ilike.%${term}%`
+            ).join(',');
+            countQuery = countQuery.or(searchFilter);
+          }
+        }
+
+        if (brandFilter && brandFilter.length > 0) {
+          countQuery = countQuery.in('brand_name', brandFilter);
+        }
+
+        if (storeFilter && storeFilter.length > 0) {
+          countQuery = countQuery.in('store_name', storeFilter);
+        }
+
+        if (priceRange && (priceRange.min > 0 || priceRange.max < 1000)) {
+          countQuery = countQuery.gte('sale_price', priceRange.min).lte('sale_price', priceRange.max);
+        }
+
         // Execute queries
-        const [{ data: allData, error: countError }, { data, error }] = await Promise.all([
-          countQuery,
-          dataQuery
+        console.log('Executing queries...');
+        const [{ data, error }, { count, error: countError }] = await Promise.all([
+          dataQuery,
+          countQuery
         ]);
 
-        if (countError || error) {
-          console.error("Error fetching from offer_search:", countError || error);
+        if (error) {
+          console.error("Error fetching data:", error);
           return { 
             products: [], 
             totalCount: 0, 
@@ -125,6 +147,12 @@ export const useProducts = (
             availableStores: [] 
           };
         }
+
+        if (countError) {
+          console.warn("Error fetching count:", countError);
+        }
+
+        console.log('Query results:', { dataLength: data?.length, count });
 
         // Transform the data to match our ProductView interface
         const products: ProductView[] = (data || []).map((item: any) => ({
@@ -149,17 +177,36 @@ export const useProducts = (
           category: item.brand_name || 'Uncategorized'
         }));
 
-        // Extract unique brands and stores from all data (for filters)
-        const availableBrands = [...new Set(allData?.map(product => product.brand_name))]
+        // For filters, get a sample of data to avoid timeout
+        const sampleQuery = supabase
+          .from('offer_search')
+          .select('brand_name, store_name')
+          .limit(1000);
+
+        if (searchQuery) {
+          const searchTerms = searchQuery.trim().split(/\s+/);
+          if (searchTerms.length > 0) {
+            const searchFilter = searchTerms.map(term => 
+              `title.ilike.%${term}%`
+            ).join(',');
+            sampleQuery.or(searchFilter);
+          }
+        }
+
+        const { data: sampleData } = await sampleQuery;
+
+        const availableBrands = [...new Set(sampleData?.map(product => product.brand_name))]
           .filter(brand => brand && brand !== 'Unknown Store')
           .sort();
 
-        const availableStores = [...new Set(allData?.map(product => product.store_name))]
+        const availableStores = [...new Set(sampleData?.map(product => product.store_name))]
           .filter(store => store && store.trim() !== '')
           .sort();
 
-        const totalCount = allData?.length || 0;
+        const totalCount = count || 0;
         const hasMore = (from + products.length) < totalCount;
+
+        console.log('Final results:', { productsCount: products.length, totalCount, hasMore });
 
         return { 
           products, 
@@ -182,6 +229,9 @@ export const useProducts = (
     },
     // Keep data fresh for 5 minutes to avoid unnecessary refetches
     staleTime: 5 * 60 * 1000,
+    // Add retry logic for failed queries
+    retry: 2,
+    retryDelay: 1000,
   });
 };
 
