@@ -2,6 +2,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ExternalLink } from "lucide-react";
+import { Check } from "lucide-react";
 import { ProductView } from "@/hooks/useProducts";
 import { useNavigate } from "react-router-dom";
 import { useRef } from "react";
@@ -90,6 +91,11 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
     product.deep_link_url : 
     product.url;
 
+  // Get store name - for Supabase products, use advertiser_name if available, otherwise use brand_name
+  const storeName = isSupabaseProduct ? 
+    (product.advertiser_name || product.brand_name || 'Loja Desconhecida') : 
+    'Loja Online';
+
   // Helper function to format price with different font sizes for cents
   const formatPriceWithCents = (price: number) => {
     const priceStr = price.toFixed(2);
@@ -153,12 +159,18 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
         </button>
         <Button 
           onClick={handleBuy} 
-          className="bg-green-500 hover:bg-green-600 w-full"
+          className="bg-green-500 hover:bg-green-600 w-full mb-2"
           disabled={!productUrl}
         >
           <ExternalLink className="mr-2 h-4 w-4" />
           Comprar
         </Button>
+        <div className="flex items-center justify-center gap-1">
+          <span className="text-xs font-bold text-gray-600">
+            Vendido por: {storeName}
+          </span>
+          <Check className="h-3 w-3 text-green-500" />
+        </div>
       </CardContent>
     </Card>
   );
