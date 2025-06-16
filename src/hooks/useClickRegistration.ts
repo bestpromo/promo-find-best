@@ -10,6 +10,11 @@ export const useClickRegistration = () => {
   const registeredOffers = useRef<Set<string>>(new Set());
 
   const registerClick = async (offerId: string) => {
+    console.log('=== REGISTERCLICK INICIADO ===');
+    console.log('offer_id recebido:', offerId);
+    console.log('Já registrado?', registeredOffers.current.has(offerId));
+    console.log('Já está registrando?', isRegistering);
+
     // Verificar se já foi registrado nesta sessão
     if (registeredOffers.current.has(offerId)) {
       console.log('Clique já registrado para offer_id:', offerId);
@@ -25,6 +30,7 @@ export const useClickRegistration = () => {
 
     setIsRegistering(true);
     setRegistrationStatus('pending');
+    console.log('Status definido como pending');
 
     try {
       console.log('=== INICIANDO REGISTRO DE CLIQUE ===');
@@ -37,8 +43,23 @@ export const useClickRegistration = () => {
         return;
       }
 
+      // Verificar conexão com Supabase
+      console.log('Testando conexão com Supabase...');
+      const { data: testData, error: testError } = await supabase
+        .from('catalog_offer_click')
+        .select('count(*)', { count: 'exact', head: true });
+      
+      if (testError) {
+        console.error('ERRO de conexão com Supabase:', testError);
+        setRegistrationStatus('error');
+        setIsRegistering(false);
+        return;
+      }
+      console.log('Conexão com Supabase OK');
+
       // Marcar como registrado antes da inserção para evitar duplicatas
       registeredOffers.current.add(offerId);
+      console.log('Offer_id marcado como registrado');
 
       // Preparar dados para inserção
       const clickData = {
@@ -52,12 +73,20 @@ export const useClickRegistration = () => {
       console.log('Dados para inserção:', clickData);
       
       // Inserir o registro
+      console.log('Executando inserção...');
       const { data, error } = await supabase
         .from('catalog_offer_click')
-        .insert([clickData]);
+        .insert([clickData])
+        .select();
+
+      console.log('Resposta da inserção - data:', data);
+      console.log('Resposta da inserção - error:', error);
 
       if (error) {
         console.error('ERRO na inserção:', error);
+        console.error('Código do erro:', error.code);
+        console.error('Mensagem do erro:', error.message);
+        console.error('Detalhes do erro:', error.details);
         // Remover da lista de registrados em caso de erro
         registeredOffers.current.delete(offerId);
         setRegistrationStatus('error');
@@ -68,10 +97,12 @@ export const useClickRegistration = () => {
       }
     } catch (error) {
       console.error('ERRO CRÍTICO durante registro:', error);
+      console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
       // Remover da lista de registrados em caso de erro
       registeredOffers.current.delete(offerId);
       setRegistrationStatus('error');
     } finally {
+      console.log('Finalizando registro, definindo isRegistering como false');
       setIsRegistering(false);
     }
   };

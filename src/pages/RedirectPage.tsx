@@ -23,6 +23,7 @@ const RedirectPage = () => {
       console.log('=== EXECUTANDO REDIRECIONAMENTO ===');
       console.log('deepLinkUrl:', deepLinkUrl);
       console.log('Status do registro:', registrationStatus);
+      console.log('window.location:', window.location);
       
       if (!deepLinkUrl) {
         console.error('deepLinkUrl não encontrada, redirecionando para home');
@@ -30,10 +31,27 @@ const RedirectPage = () => {
         return;
       }
 
+      // Verificar se é uma URL válida
+      try {
+        new URL(deepLinkUrl);
+        console.log('URL válida confirmada');
+      } catch (urlError) {
+        console.error('URL inválida:', urlError);
+        console.log('Tentando redirecionar mesmo assim...');
+      }
+
       console.log('Redirecionando para:', deepLinkUrl);
-      window.location.href = deepLinkUrl;
+      console.log('Tipo de redirecionamento: window.location.href');
+      
+      // Adicionar um pequeno delay para garantir que os logs sejam visíveis
+      setTimeout(() => {
+        console.log('Executando window.location.href...');
+        window.location.href = deepLinkUrl;
+      }, 100);
+      
     } catch (error) {
       console.error('Erro durante redirecionamento:', error);
+      console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
       navigate("/");
     }
   };
@@ -58,6 +76,8 @@ const RedirectPage = () => {
 
     if (!deepLinkUrl || !offerId) {
       console.log('Parâmetros obrigatórios faltando - redirecionando para home');
+      console.log('deepLinkUrl presente?', !!deepLinkUrl);
+      console.log('offerId presente?', !!offerId);
       navigate("/");
       return;
     }
@@ -66,6 +86,11 @@ const RedirectPage = () => {
     console.log('Iniciando registro do clique...');
     registerClick(offerId);
   }, [deepLinkUrl, offerId, navigate, registerClick]);
+
+  // Log do status de registro quando muda
+  useEffect(() => {
+    console.log('Status de registro mudou para:', registrationStatus);
+  }, [registrationStatus]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
