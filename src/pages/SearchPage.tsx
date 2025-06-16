@@ -38,7 +38,7 @@ const SearchPage = () => {
   // Helper function to check if product has image
   const hasValidImage = (product: ProductView) => {
     const isSupabaseProduct = 'offer_id' in product;
-    const imageUrl = isSupabaseProduct ? product.image_url : product.image;
+    const imageUrl = isSupabaseProduct ? product.image_url : product.photo;
     
     // Consider image invalid if it's empty, null, undefined, or placeholder
     return imageUrl && 
@@ -47,7 +47,6 @@ const SearchPage = () => {
            imageUrl !== 'placeholder.svg';
   };
 
-  // Sort products based on selected sorting option and image availability
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     const productA = a as ProductView;
     const productB = b as ProductView;

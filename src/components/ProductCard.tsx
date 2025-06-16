@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ProductView } from "@/hooks/useProducts";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +7,7 @@ import { ProductImage } from "./ProductImage";
 import { ProductPrice } from "./ProductPrice";
 import { ProductBrandInfo } from "./ProductBrandInfo";
 import { ProductActions } from "./ProductActions";
+import { ProductPartnerInfo } from "./ProductPartnerInfo";
 
 // Update the Product type to include the url property
 interface Product {
@@ -131,7 +131,6 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
           
           <ProductBrandInfo
             category={category}
-            storeName={storeName}
             onBrandClick={handleBrandClick}
             onShareClick={handleShareClick}
           />
@@ -140,6 +139,8 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
             onBuy={handleBuy}
             productUrl={productUrl}
           />
+          
+          <ProductPartnerInfo storeName={storeName} />
         </CardContent>
       </Card>
 
