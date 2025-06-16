@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,8 +7,10 @@ import { Progress } from "@/components/ui/progress";
 const RedirectPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [countdown, setCountdown] = useState(3);
+  const [countdown, setCountdown] = useState(5); // Aumentei para 5 segundos
   const [progress, setProgress] = useState(0);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [registrationStatus, setRegistrationStatus] = useState<'pending' | 'success' | 'error'>('pending');
 
   const offerId = searchParams.get("offer_id");
   const deepLinkUrl = searchParams.get("deep_link_url");
@@ -16,11 +19,10 @@ const RedirectPage = () => {
   const price = searchParams.get("price");
 
   useEffect(() => {
-    console.log('=== DEBUGGING URL PARAMS ===');
+    console.log('=== REDIRECT PAGE LOADED ===');
     console.log('URL completa:', window.location.href);
-    console.log('Todos os parâmetros:', Object.fromEntries(searchParams.entries()));
-    console.log('offer_id extraído:', offerId);
-    console.log('deepLinkUrl extraído:', deepLinkUrl);
+    console.log('offer_id:', offerId);
+    console.log('deepLinkUrl:', deepLinkUrl);
 
     if (!deepLinkUrl || !offerId) {
       console.log('Parâmetros obrigatórios faltando - redirecionando para home');
@@ -28,13 +30,14 @@ const RedirectPage = () => {
       return;
     }
 
-    // Registrar o clique imediatamente ao carregar a página
+    // Registrar o clique imediatamente
     registerClick();
 
+    // Iniciar o countdown apenas após o registro
     const interval = setInterval(() => {
       setCountdown((prev) => {
         const newCountdown = prev - 1;
-        setProgress((3 - newCountdown) * 33.33);
+        setProgress((5 - newCountdown) * 20); // Ajustado para 5 segundos
         
         if (newCountdown <= 0) {
           clearInterval(interval);
@@ -50,119 +53,95 @@ const RedirectPage = () => {
   }, [deepLinkUrl, offerId, navigate]);
 
   const registerClick = async () => {
+    if (isRegistering) {
+      console.log('Registro já em andamento, ignorando...');
+      return;
+    }
+
+    setIsRegistering(true);
+    setRegistrationStatus('pending');
+
     try {
-      console.log('=== INÍCIO DO REGISTRO DE CLIQUE ===');
-      console.log('offer_id recebido:', offerId);
-      console.log('Tipo do offer_id:', typeof offerId);
-      console.log('offer_id é válido?', offerId && offerId.trim() !== '');
+      console.log('=== INICIANDO REGISTRO DE CLIQUE ===');
+      console.log('offer_id:', offerId);
       
-      // Verificar se offer_id é válido
       if (!offerId || offerId.trim() === '') {
-        console.error('ERRO: offer_id está vazio ou inválido');
+        console.error('ERRO: offer_id inválido');
+        setRegistrationStatus('error');
         return;
       }
 
-      // Verificar conexão com Supabase
-      console.log('Testando conexão com Supabase...');
-      const { data: testData, error: testError } = await supabase
-        .from('catalog_offer_click')
-        .select('count', { count: 'exact', head: true });
-      
-      if (testError) {
-        console.error('Erro na conexão com Supabase:', testError);
-        return;
-      }
-      
-      console.log('Conexão com Supabase OK. Contagem atual de registros:', testData);
-      
-      // Verificar se a tabela existe e tem a estrutura esperada
-      console.log('Verificando estrutura da tabela...');
-      const { data: sampleData, error: sampleError } = await supabase
-        .from('catalog_offer_click')
-        .select('*')
-        .limit(1);
-      
-      if (sampleError) {
-        console.error('Erro ao verificar estrutura da tabela:', sampleError);
-      } else {
-        console.log('Estrutura da tabela OK. Amostra:', sampleData);
-      }
-      
-      // Preparar dados para inserção com conversão explícita do offer_id
+      // Preparar dados para inserção
       const clickData = {
-        offer_id: offerId.toString().trim(), // Garantir que seja string limpa
+        offer_id: offerId.toString().trim(),
         clicked_at: new Date().toISOString(),
         user_ip: null,
         user_agent: navigator.userAgent,
         referrer_url: window.location.origin
       };
       
-      console.log('Dados preparados para inserção:', clickData);
-      console.log('JSON dos dados:', JSON.stringify(clickData, null, 2));
+      console.log('Dados para inserção:', clickData);
       
-      // Tentar inserir o registro
-      console.log('Tentando inserir registro...');
+      // Tentar inserir o registro com timeout
       const insertPromise = supabase
         .from('catalog_offer_click')
-        .insert([clickData])
-        .select();
+        .insert([clickData]);
       
-      console.log('Promise criada, aguardando resultado...');
-      const { data, error } = await insertPromise;
-      console.log('Resultado recebido do Supabase');
+      // Adicionar timeout de 10 segundos
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout na inserção')), 10000)
+      );
+
+      const { data, error } = await Promise.race([insertPromise, timeoutPromise]) as any;
 
       if (error) {
-        console.error('=== ERRO AO REGISTRAR CLIQUE ===');
-        console.error('Código do erro:', error.code);
-        console.error('Mensagem do erro:', error.message);
-        console.error('Detalhes completos:', error);
-        console.error('Hint:', error.hint);
-        console.error('Details:', error.details);
+        console.error('ERRO na inserção:', error);
+        setRegistrationStatus('error');
         
-        // Tentar inserção alternativa sem select
-        console.log('Tentando inserção sem select...');
-        const { error: insertError } = await supabase
+        // Tentar uma segunda vez com uma abordagem diferente
+        console.log('Tentando inserção novamente...');
+        const { error: retryError } = await supabase
           .from('catalog_offer_click')
-          .insert([clickData]);
+          .insert({
+            offer_id: offerId,
+            clicked_at: new Date().toISOString()
+          });
         
-        if (insertError) {
-          console.error('Erro na inserção alternativa:', insertError);
+        if (retryError) {
+          console.error('Erro na segunda tentativa:', retryError);
         } else {
-          console.log('Inserção alternativa realizada com sucesso!');
+          console.log('Segunda tentativa bem-sucedida!');
+          setRegistrationStatus('success');
         }
       } else {
-        console.log('=== CLIQUE REGISTRADO COM SUCESSO ===');
-        console.log('Dados retornados:', data);
-        console.log('Número de registros inseridos:', data?.length || 0);
+        console.log('=== REGISTRO REALIZADO COM SUCESSO ===');
+        console.log('Dados inseridos:', data);
+        setRegistrationStatus('success');
         
-        // Verificar se realmente foi inserido
-        console.log('Verificando se o registro foi realmente inserido...');
-        const { data: verifyData, error: verifyError } = await supabase
-          .from('catalog_offer_click')
-          .select('*')
-          .eq('offer_id', offerId)
-          .order('clicked_at', { ascending: false })
-          .limit(1);
-        
-        if (verifyError) {
-          console.error('Erro ao verificar inserção:', verifyError);
-        } else {
-          console.log('Verificação da inserção:', verifyData);
-        }
+        // Verificar se foi realmente inserido
+        setTimeout(async () => {
+          const { data: verifyData, error: verifyError } = await supabase
+            .from('catalog_offer_click')
+            .select('*')
+            .eq('offer_id', offerId)
+            .order('clicked_at', { ascending: false })
+            .limit(1);
+          
+          console.log('Verificação pós-inserção:', { verifyData, verifyError });
+        }, 1000);
       }
     } catch (error) {
-      console.error('=== ERRO DURANTE EXECUÇÃO ===');
-      console.error('Erro capturado:', error);
-      console.error('Stack trace:', error instanceof Error ? error.stack : 'N/A');
-      console.error('Tipo do erro:', typeof error);
-      console.error('Nome do erro:', error instanceof Error ? error.name : 'N/A');
+      console.error('ERRO CRÍTICO durante registro:', error);
+      setRegistrationStatus('error');
+    } finally {
+      setIsRegistering(false);
     }
   };
 
   const handleRedirect = () => {
     try {
       console.log('Redirecionando para:', deepLinkUrl);
-      // Redirecionar para a URL da loja parceira na mesma aba
+      console.log('Status do registro:', registrationStatus);
       window.location.href = deepLinkUrl;
     } catch (error) {
       console.error('Erro durante redirecionamento:', error);
@@ -182,10 +161,23 @@ const RedirectPage = () => {
           />
         </div>
 
+        {/* Status do registro */}
+        <div className="mb-4">
+          {registrationStatus === 'pending' && (
+            <p className="text-yellow-600 text-sm">Registrando clique...</p>
+          )}
+          {registrationStatus === 'success' && (
+            <p className="text-green-600 text-sm">✓ Clique registrado com sucesso!</p>
+          )}
+          {registrationStatus === 'error' && (
+            <p className="text-red-600 text-sm">⚠ Erro ao registrar clique</p>
+          )}
+        </div>
+
         {/* Mensagem de redirecionamento */}
         <div className="mb-8">
           <p className="text-lg text-gray-700 mb-2">
-            Estamos redirecionando você para a loja parceira em ({countdown > 0 ? countdown : '0'}...)
+            Estamos redirecionando você para a loja parceira em {countdown > 0 ? countdown : '0'} segundos...
           </p>
           {title && (
             <p className="text-sm text-gray-500 mb-1">
@@ -209,6 +201,14 @@ const RedirectPage = () => {
           <Progress value={progress} className="h-2 mb-4" />
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
         </div>
+
+        {/* Debug info - só aparece se houver erro */}
+        {registrationStatus === 'error' && (
+          <div className="mt-4 text-xs text-gray-400">
+            <p>offer_id: {offerId}</p>
+            <p>Verifique o console para mais detalhes</p>
+          </div>
+        )}
       </div>
     </div>
   );
