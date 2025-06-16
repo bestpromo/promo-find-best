@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ExternalLink } from "lucide-react";
 import { ProductView } from "@/hooks/useProducts";
 import { useNavigate } from "react-router-dom";
+import { useRef } from "react";
 
 // Update the Product type to include the url property
 interface Product {
@@ -23,12 +24,23 @@ interface ProductCardProps {
 
 export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
   const navigate = useNavigate();
+  const clickedRef = useRef<boolean>(false);
 
   const handleBuy = () => {
+    // Prevenir múltiplos cliques
+    if (clickedRef.current) {
+      console.log('Clique já processado para este produto');
+      return;
+    }
+
+    clickedRef.current = true;
+
     // Determine if we're dealing with a mock product or a Supabase product
     const isSupabaseProduct = 'offer_id' in product;
     
     if (isSupabaseProduct) {
+      console.log('Processando clique para produto Supabase:', product.offer_id);
+      
       // Abrir a página de redirecionamento em uma nova aba
       const params = new URLSearchParams({
         offer_id: product.offer_id,
@@ -47,6 +59,11 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
         window.open(url, '_blank', 'noopener,noreferrer');
       }
     }
+
+    // Reset após um tempo para permitir novos cliques se necessário
+    setTimeout(() => {
+      clickedRef.current = false;
+    }, 2000);
   };
 
   const handleBrandClick = () => {

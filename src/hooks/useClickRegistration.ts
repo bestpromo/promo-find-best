@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
 export type RegistrationStatus = 'pending' | 'success' | 'error';
@@ -7,8 +7,17 @@ export type RegistrationStatus = 'pending' | 'success' | 'error';
 export const useClickRegistration = () => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [registrationStatus, setRegistrationStatus] = useState<RegistrationStatus>('pending');
+  const registeredOffers = useRef<Set<string>>(new Set());
 
   const registerClick = async (offerId: string) => {
+    // Verificar se já foi registrado nesta sessão
+    if (registeredOffers.current.has(offerId)) {
+      console.log('Clique já registrado para offer_id:', offerId);
+      setRegistrationStatus('success');
+      return;
+    }
+
+    // Verificar se já está registrando
     if (isRegistering) {
       console.log('Registro já em andamento, ignorando...');
       return;
@@ -27,6 +36,9 @@ export const useClickRegistration = () => {
         return;
       }
 
+      // Marcar como registrado antes da inserção para evitar duplicatas
+      registeredOffers.current.add(offerId);
+
       // Preparar dados para inserção
       const clickData = {
         offer_id: offerId.toString().trim(),
@@ -38,56 +50,25 @@ export const useClickRegistration = () => {
       
       console.log('Dados para inserção:', clickData);
       
-      // Tentar inserir o registro com timeout
-      const insertPromise = supabase
+      // Inserir o registro
+      const { data, error } = await supabase
         .from('catalog_offer_click')
         .insert([clickData]);
-      
-      // Adicionar timeout de 10 segundos
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Timeout na inserção')), 10000)
-      );
-
-      const { data, error } = await Promise.race([insertPromise, timeoutPromise]) as any;
 
       if (error) {
         console.error('ERRO na inserção:', error);
+        // Remover da lista de registrados em caso de erro
+        registeredOffers.current.delete(offerId);
         setRegistrationStatus('error');
-        
-        // Tentar uma segunda vez com uma abordagem diferente
-        console.log('Tentando inserção novamente...');
-        const { error: retryError } = await supabase
-          .from('catalog_offer_click')
-          .insert({
-            offer_id: offerId,
-            clicked_at: new Date().toISOString()
-          });
-        
-        if (retryError) {
-          console.error('Erro na segunda tentativa:', retryError);
-        } else {
-          console.log('Segunda tentativa bem-sucedida!');
-          setRegistrationStatus('success');
-        }
       } else {
         console.log('=== REGISTRO REALIZADO COM SUCESSO ===');
         console.log('Dados inseridos:', data);
         setRegistrationStatus('success');
-        
-        // Verificar se foi realmente inserido
-        setTimeout(async () => {
-          const { data: verifyData, error: verifyError } = await supabase
-            .from('catalog_offer_click')
-            .select('*')
-            .eq('offer_id', offerId)
-            .order('clicked_at', { ascending: false })
-            .limit(1);
-          
-          console.log('Verificação pós-inserção:', { verifyData, verifyError });
-        }, 1000);
       }
     } catch (error) {
       console.error('ERRO CRÍTICO durante registro:', error);
+      // Remover da lista de registrados em caso de erro
+      registeredOffers.current.delete(offerId);
       setRegistrationStatus('error');
     } finally {
       setIsRegistering(false);
