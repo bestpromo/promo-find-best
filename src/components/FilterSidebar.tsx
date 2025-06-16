@@ -18,7 +18,6 @@ interface FilterSidebarProps {
   selectedBrands?: string[];
   selectedStores?: string[];
   priceRange?: { min: number; max: number };
-  isLoading?: boolean;
 }
 
 export const FilterSidebar = ({ 
@@ -32,8 +31,7 @@ export const FilterSidebar = ({
   allProducts = [],
   selectedBrands = [],
   selectedStores = [],
-  priceRange = { min: 0, max: 1000 },
-  isLoading = false
+  priceRange = { min: 0, max: 1000 }
 }: FilterSidebarProps) => {
   const [localSelectedBrands, setLocalSelectedBrands] = useState<string[]>(selectedBrands);
   const [localSelectedStores, setLocalSelectedStores] = useState<string[]>(selectedStores);
@@ -61,24 +59,29 @@ export const FilterSidebar = ({
     }
   }, [searchQuery]);
 
-  // Clean up selected brands when stores change and brands are no longer available
+  // Clean up selected brands when stores change
   useEffect(() => {
-    // Filter selected brands to only include those available in the current brand list
-    const validSelectedBrands = localSelectedBrands.filter(brand => 
-      availableBrands.includes(brand)
-    );
+    if (localSelectedStores.length > 0) {
+      // Get brands available in selected stores
+      const brandsInSelectedStores = [...new Set(
+        allProducts
+          .filter(product => localSelectedStores.includes(product.store_name))
+          .map(product => product.brand_name)
+          .filter(brand => brand && brand !== 'Unknown Store')
+      )];
 
-    // If some brands were removed, update the selection
-    if (validSelectedBrands.length !== localSelectedBrands.length) {
-      console.log('Cleaning up invalid brands:', {
-        before: localSelectedBrands,
-        after: validSelectedBrands,
-        availableBrands
-      });
-      setLocalSelectedBrands(validSelectedBrands);
-      onBrandChange(validSelectedBrands);
+      // Filter selected brands to only include those available in selected stores
+      const validSelectedBrands = localSelectedBrands.filter(brand => 
+        brandsInSelectedStores.includes(brand)
+      );
+
+      // If some brands were removed, update the selection
+      if (validSelectedBrands.length !== localSelectedBrands.length) {
+        setLocalSelectedBrands(validSelectedBrands);
+        onBrandChange(validSelectedBrands);
+      }
     }
-  }, [availableBrands, localSelectedBrands]);
+  }, [localSelectedStores, allProducts]);
 
   const handleBrandToggle = (brand: string) => {
     const newSelectedBrands = localSelectedBrands.includes(brand)
@@ -120,7 +123,6 @@ export const FilterSidebar = ({
             size="sm" 
             onClick={handleClearFilters}
             className="w-full"
-            disabled={isLoading}
           >
             Limpar Filtros
           </Button>
@@ -132,10 +134,6 @@ export const FilterSidebar = ({
             selectedStores={localSelectedStores}
             allProducts={allProducts}
             onStoreToggle={handleStoreToggle}
-            isLoading={isLoading}
-            searchQuery={searchQuery}
-            selectedBrands={localSelectedBrands}
-            priceRange={priceRange}
           />
 
           {/* 2. Brand Filter - Second, considers store selection */}
@@ -145,9 +143,6 @@ export const FilterSidebar = ({
             allProducts={allProducts}
             selectedStores={localSelectedStores}
             onBrandToggle={handleBrandToggle}
-            isLoading={isLoading}
-            searchQuery={searchQuery}
-            priceRange={priceRange}
           />
 
           {/* 3. Price Range Filter - Third, considers store and brand selection */}

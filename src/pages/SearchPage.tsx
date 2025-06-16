@@ -1,170 +1,259 @@
-import { useEffect } from "react";
-import { useProducts } from "@/hooks/useProducts";
+
+import { SearchBar } from "@/components/SearchBar";
+import { ProductCard } from "@/components/ProductCard";
+import { SearchControls } from "@/components/SearchControls";
+import { FilterSidebar } from "@/components/FilterSidebar";
+import { MobileFilters } from "@/components/MobileFilters";
+import { useSearchParams, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { useProducts, ProductView, applyFilters } from "@/hooks/useProducts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
-import { useSearchState } from "@/hooks/useSearchState";
-import { SearchPageHeader } from "@/components/search/SearchPageHeader";
-import { SearchPageLayout } from "@/components/search/SearchPageLayout";
-import { SearchResults } from "@/components/search/SearchResults";
 
-// Reduced from 48 to 24 to avoid server overload
-const PRODUCTS_PER_PAGE = 24;
+const PRODUCTS_PER_PAGE = 50;
 
 const SearchPage = () => {
-  const {
-    sortBy,
-    setSortBy,
-    displayMode,
-    setDisplayMode,
-    currentPage,
-    setCurrentPage,
-    brandFilter,
-    setBrandFilter,
-    storeFilter,
-    setStoreFilter,
-    priceRange,
-    setPriceRange,
-    allProducts,
-    setAllProducts,
-    isLoadingMore,
-    setIsLoadingMore,
-    query
-  } = useSearchState();
-
-  const { data, isLoading } = useProducts(
-    query, 
-    sortBy, 
-    currentPage, 
-    PRODUCTS_PER_PAGE, 
-    brandFilter, 
-    priceRange, 
-    storeFilter
-  );
+  const [searchParams] = useSearchParams();
+  const [sortBy, setSortBy] = useState<string>('nome-asc');
+  const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
+  const [visibleProducts, setVisibleProducts] = useState(PRODUCTS_PER_PAGE);
+  const [brandFilter, setBrandFilter] = useState<string[]>([]);
+  const [storeFilter, setStoreFilter] = useState<string[]>([]);
+  const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 1000 });
   
+  const query = searchParams.get("q") || "";
+  const { data, isLoading } = useProducts(query, sortBy);
   const isMobile = useIsMobile();
   
-  const products = data?.products || [];
-  const totalCount = data?.totalCount || 0;
-  const hasMore = data?.hasMore || false;
+  const allProducts = data?.allProducts || [];
   const availableBrands = data?.availableBrands || [];
   const availableStores = data?.availableStores || [];
 
-  // Calculate pagination info
-  const totalPages = Math.max(1, Math.ceil(totalCount / PRODUCTS_PER_PAGE));
-  const startIndex = totalCount > 0 ? (currentPage - 1) * PRODUCTS_PER_PAGE + 1 : 0;
-  const endIndex = Math.min(currentPage * PRODUCTS_PER_PAGE, totalCount);
+  // Apply filters client-side
+  const filteredProducts = applyFilters(allProducts, brandFilter, priceRange, storeFilter);
 
   // Calculate active filters count for mobile
   const activeFiltersCount = brandFilter.length + storeFilter.length +
     (priceRange.min > 0 || priceRange.max < 1000 ? 1 : 0);
 
-  // Update products for mobile infinite scroll
+  // Reset filters when search query changes
   useEffect(() => {
-    if (isMobile) {
-      if (currentPage === 1) {
-        setAllProducts(products);
-      } else if (!isLoading) {
-        setAllProducts(prev => [...prev, ...products]);
-        setIsLoadingMore(false);
-      }
-    }
-  }, [products, isMobile, currentPage, isLoading]);
+    setBrandFilter([]);
+    setStoreFilter([]);
+    setPriceRange({ min: 0, max: 1000 });
+    setVisibleProducts(PRODUCTS_PER_PAGE);
+  }, [query]);
 
-  // Load more function for infinite scroll
-  const loadMore = () => {
-    if (!isLoadingMore && hasMore) {
-      setIsLoadingMore(true);
-      setCurrentPage(prev => prev + 1);
-    }
+  // Helper function to check if product has image
+  const hasValidImage = (product: ProductView) => {
+    const isSupabaseProduct = 'offer_id' in product;
+    const imageUrl = isSupabaseProduct ? product.image_url : (product as any).image;
+    
+    // Consider image invalid if it's empty, null, undefined, or placeholder
+    return imageUrl && 
+           imageUrl !== '/placeholder.svg' && 
+           imageUrl.trim() !== '' &&
+           imageUrl !== 'placeholder.svg';
   };
 
-  // Use infinite scroll hook for mobile
-  useInfiniteScroll({
-    hasMore: hasMore && isMobile,
-    onLoadMore: loadMore,
-    threshold: 200
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    const productA = a as ProductView;
+    const productB = b as ProductView;
+    
+    // First, sort by image availability (products with images first)
+    const aHasImage = hasValidImage(productA);
+    const bHasImage = hasValidImage(productB);
+    
+    if (aHasImage && !bHasImage) return -1; // A has image, B doesn't - A comes first
+    if (!aHasImage && bHasImage) return 1;  // B has image, A doesn't - B comes first
+    
+    // If both have images or both don't have images, sort by the selected criterion
+    switch (sortBy) {
+      case 'price-desc':
+        return (productB.sale_price || 0) - (productA.sale_price || 0);
+      case 'price-asc':
+        return (productA.sale_price || 0) - (productB.sale_price || 0);
+      case 'nome-desc':
+        return (productB.title || '').localeCompare(productA.title || '');
+      case 'nome-asc':
+      default:
+        return (productA.title || '').localeCompare(productB.title || '');
+    }
   });
+
+  const handleLoadMore = () => {
+    setVisibleProducts(prev => prev + PRODUCTS_PER_PAGE);
+  };
 
   const handleClearFilters = () => {
     setBrandFilter([]);
     setStoreFilter([]);
     setPriceRange({ min: 0, max: 1000 });
-    setCurrentPage(1);
-    setAllProducts([]);
+    setVisibleProducts(PRODUCTS_PER_PAGE);
   };
 
   const handleBrandFilterChange = (brands: string[]) => {
     setBrandFilter(brands);
+    setVisibleProducts(PRODUCTS_PER_PAGE); // Reset pagination when filter changes
   };
 
   const handleStoreFilterChange = (stores: string[]) => {
     setStoreFilter(stores);
+    setVisibleProducts(PRODUCTS_PER_PAGE); // Reset pagination when filter changes
   };
 
   const handlePriceRangeChange = (range: { min: number; max: number }) => {
     setPriceRange(range);
+    setVisibleProducts(PRODUCTS_PER_PAGE); // Reset pagination when filter changes
   };
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const productsToShow = sortedProducts.slice(0, visibleProducts);
+  const hasMoreProducts = visibleProducts < sortedProducts.length;
 
-  // Determine which products to display
-  const displayProducts = isMobile ? allProducts : products;
-
-  console.log('SearchPage render:', { 
-    totalCount, 
-    totalPages, 
-    currentPage, 
-    isMobile,
-    displayProductsLength: displayProducts.length,
-    shouldShowPagination: !isMobile && totalPages > 1,
-    isLoading
+  // Use infinite scroll hook for mobile
+  const { isLoading: isLoadingMore } = useInfiniteScroll({
+    hasMore: hasMoreProducts,
+    onLoadMore: handleLoadMore,
+    threshold: 200
   });
 
   return (
     <div className="min-h-screen">
-      <SearchPageHeader query={query} isMobile={isMobile} />
+      {/* Fixed Header */}
+      <header className={`border-b bg-white z-50 ${isMobile ? 'fixed top-0 left-0 right-0' : ''}`}>
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center gap-8">
+            <Link to="/">
+              <img 
+                src="/lovable-uploads/5a8f2c7c-9460-4fbf-a4ab-7160fe6749d2.png" 
+                alt="Bestpromo Logo" 
+                className="h-8"
+              />
+            </Link>
+            <SearchBar initialValue={query} className="flex-1" />
+          </div>
+        </div>
+      </header>
       
-      <SearchPageLayout
-        isMobile={isMobile}
-        query={query}
-        displayMode={displayMode}
-        availableBrands={availableBrands}
-        availableStores={availableStores}
-        displayProducts={displayProducts}
-        activeFiltersCount={activeFiltersCount}
-        selectedBrands={brandFilter}
-        selectedStores={storeFilter}
-        priceRange={priceRange}
-        isLoading={isLoading}
-        onSortChange={setSortBy}
-        onDisplayModeChange={setDisplayMode}
-        onBrandFilterChange={handleBrandFilterChange}
-        onStoreFilterChange={handleStoreFilterChange}
-        onPriceRangeChange={handlePriceRangeChange}
-        onClearFilters={handleClearFilters}
-      >
-        <SearchResults
-          displayProducts={displayProducts}
-          displayMode={displayMode}
-          totalCount={totalCount}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          startIndex={startIndex}
-          endIndex={endIndex}
-          brandFilter={brandFilter}
-          storeFilter={storeFilter}
-          priceRange={priceRange}
-          query={query}
-          isLoading={isLoading}
-          isLoadingMore={isLoadingMore}
-          isMobile={isMobile}
-          hasMore={hasMore}
-          onPageChange={handlePageChange}
-        />
-      </SearchPageLayout>
+      {/* Mobile Filters - Fixed below header */}
+      {isMobile && (
+        <div className="fixed top-[72px] left-0 right-0 z-40">
+          <MobileFilters
+            onBrandChange={handleBrandFilterChange}
+            onStoreChange={handleStoreFilterChange}
+            onPriceRangeChange={handlePriceRangeChange}
+            onClearFilters={handleClearFilters}
+            onSortChange={setSortBy}
+            onDisplayModeChange={setDisplayMode}
+            displayMode={displayMode}
+            availableBrands={availableBrands}
+            availableStores={availableStores}
+            searchQuery={query}
+            allProducts={allProducts}
+            activeFiltersCount={activeFiltersCount}
+            selectedBrands={brandFilter}
+            selectedStores={storeFilter}
+            priceRange={priceRange}
+          />
+        </div>
+      )}
+
+      {/* Desktop Controls - Only show on larger screens */}
+      {!isMobile && (
+        <div className="container mx-auto px-4 py-4 border-b">
+          <SearchControls 
+            onSortChange={setSortBy}
+            onDisplayModeChange={setDisplayMode}
+            displayMode={displayMode}
+          />
+        </div>
+      )}
+
+      {/* Main Content with appropriate padding */}
+      <main className={`container mx-auto px-4 py-8 ${isMobile ? 'pt-[140px]' : ''}`}>
+        <div className="flex gap-6">
+          {/* Desktop Filter Sidebar - Only show on larger screens */}
+          {!isMobile && (
+            <FilterSidebar
+              onBrandChange={handleBrandFilterChange}
+              onStoreChange={handleStoreFilterChange}
+              onPriceRangeChange={handlePriceRangeChange}
+              onClearFilters={handleClearFilters}
+              availableBrands={availableBrands}
+              availableStores={availableStores}
+              searchQuery={query}
+              allProducts={allProducts}
+              selectedBrands={brandFilter}
+              selectedStores={storeFilter}
+              priceRange={priceRange}
+            />
+          )}
+
+          {/* Products Section */}
+          <div className="flex-1">
+            {isLoading ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">Carregando produtos...</p>
+              </div>
+            ) : (
+              <>
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600">
+                    {sortedProducts.length} produtos encontrados
+                    {brandFilter.length > 0 && ` • Marcas: ${brandFilter.join(', ')}`}
+                    {storeFilter.length > 0 && ` • Lojas: ${storeFilter.join(', ')}`}
+                    {(priceRange.min > 0 || priceRange.max < 1000) && 
+                      ` • Preço: R$ ${priceRange.min} - R$ ${priceRange.max}`
+                    }
+                  </p>
+                </div>
+
+                <div className={`
+                  ${displayMode === 'grid' 
+                    ? 'grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6' 
+                    : 'flex flex-col gap-6'
+                  }
+                `}>
+                  {productsToShow.map((product) => (
+                    <ProductCard 
+                      key={product.id} 
+                      product={product} 
+                      displayMode={displayMode}
+                    />
+                  ))}
+                </div>
+                
+                {sortedProducts.length === 0 && (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500">Nenhum produto encontrado para "{query}"</p>
+                  </div>
+                )}
+
+                {/* Show loading indicator on mobile during infinite scroll */}
+                {isMobile && isLoadingMore && (
+                  <div className="text-center py-4">
+                    <p className="text-gray-500">Carregando mais produtos...</p>
+                  </div>
+                )}
+
+                {/* Show load more button only on desktop/tablet */}
+                {!isMobile && hasMoreProducts && (
+                  <div className="flex justify-center mt-8">
+                    <Button 
+                      onClick={handleLoadMore}
+                      variant="outline"
+                      className="hover:bg-orange-500 hover:text-white"
+                    >
+                      Carregar Mais Produtos ({Math.min(PRODUCTS_PER_PAGE, sortedProducts.length - visibleProducts)} restantes)
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </main>
     </div>
   );
 };

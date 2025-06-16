@@ -1,43 +1,24 @@
 
 import { FilterSection } from "./FilterSection";
 import { FilterItem } from "./FilterItem";
-import { FilterSkeleton } from "@/components/ui/skeleton";
-import { useFilterCounts } from "@/hooks/useFilterCounts";
 
 interface StoreFilterProps {
   availableStores: string[];
   selectedStores: string[];
   allProducts: any[];
   onStoreToggle: (store: string) => void;
-  isLoading?: boolean;
-  searchQuery?: string;
-  selectedBrands?: string[];
-  priceRange?: { min: number; max: number };
 }
 
 export const StoreFilter = ({
   availableStores,
   selectedStores,
   allProducts,
-  onStoreToggle,
-  isLoading = false,
-  searchQuery = "",
-  selectedBrands = [],
-  priceRange = { min: 0, max: 1000 }
+  onStoreToggle
 }: StoreFilterProps) => {
-  // Get real filter counts
-  const { data: filterCounts } = useFilterCounts({
-    searchQuery,
-    selectedStores: [],
-    selectedBrands,
-    priceRange
-  });
-
-  const { storeCounts = {} } = filterCounts || {};
-
-  // Get real product count for each store
+  // Calculate product count for each store (independent of other filters)
   const getStoreProductCount = (store: string) => {
-    return storeCounts[store] || 0;
+    const filteredProducts = allProducts.filter(product => product.store_name === store);
+    return filteredProducts.length;
   };
 
   // Create ordered store list with selected stores at the top
@@ -54,14 +35,6 @@ export const StoreFilter = ({
   };
 
   const orderedStores = getOrderedStores();
-
-  if (isLoading) {
-    return (
-      <FilterSection title="Parceiros" showCount={false} className="h-48">
-        <FilterSkeleton />
-      </FilterSection>
-    );
-  }
 
   return (
     <FilterSection 

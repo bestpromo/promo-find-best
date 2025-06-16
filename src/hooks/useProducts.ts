@@ -1,182 +1,136 @@
-
 import { useQuery } from "@tanstack/react-query";
-import type { ProductView, ProductsResponse, ProductFilters } from "@/types/product";
-import { transformProductData, extractUniqueFilters } from "@/utils/productTransformers";
 import { supabase } from "@/integrations/supabase/client";
 
-export const useProducts = (
-  searchQuery: string, 
-  sortBy: string, 
-  page: number = 1,
-  pageSize: number = 50,
+// Define a type for our products view
+export type ProductView = {
+  offer_id: string;
+  title: string;
+  url_slug: string;
+  deep_link_url: string;
+  brand_name: string;
+  advertiser_name: string;
+  store_name: string; // Add store_name field
+  image_url: string;
+  sale_price: number | null;
+  promotional_price: number | null;
+  // Adding missing properties for compatibility
+  id: string;
+  nome: string;
+  description: string;
+  url: string;
+  photo: string;
+  price: number | null;
+  loja_nome: string;
+  category: string;
+};
+
+export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: string[], priceRange?: { min: number; max: number }) => {
+  return useQuery({
+    // Remove brandFilter and priceRange from queryKey to prevent refetching on filter changes
+    queryKey: ["products", searchQuery],
+    queryFn: async () => {
+      try {
+        let query = supabase
+          .from('offer_search')
+          .select('*')
+          .limit(1000);
+
+        if (searchQuery) {
+          const searchTerms = searchQuery.trim().split(/\s+/);
+          
+          if (searchTerms.length > 0) {
+            // Using correct field names from the offer_search view
+            const filters = searchTerms.map(term => 
+              `title.ilike.%${term}%,store_name.ilike.%${term}%`
+            );
+            
+            query = query.or(filters.join(','));
+          }
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+          console.error("Error fetching from offer_search:", error);
+          return { allProducts: [], availableBrands: [], availableStores: [] };
+        }
+
+        // Transform the data to match our ProductView interface
+        const allProducts: ProductView[] = (data || []).map((item: any) => ({
+          offer_id: item.offer_id || Math.random().toString(),
+          title: item.title || 'Unnamed Product',
+          url_slug: item.url_slug || '',
+          deep_link_url: item.deep_link_url || '',
+          brand_name: item.brand_name || 'Unknown Store',
+          advertiser_name: item.advertiser_name || '',
+          store_name: item.store_name || '', // Add store_name mapping
+          image_url: item.image_url || '/placeholder.svg',
+          sale_price: parseFloat(item.sale_price) || null,
+          promotional_price: parseFloat(item.promotional_price) || null,
+          // Compatibility properties
+          id: item.offer_id || Math.random().toString(),
+          nome: item.title || 'Unnamed Product',
+          description: `Product from ${item.brand_name || 'Unknown'}`,
+          url: item.deep_link_url || '',
+          photo: item.image_url || '/placeholder.svg',
+          price: parseFloat(item.sale_price) || null,
+          loja_nome: item.store_name || item.brand_name || 'Unknown Store', // Use store_name for loja_nome
+          category: item.brand_name || 'Uncategorized'
+        }));
+
+        // Extract ALL unique brands from the products
+        const availableBrands = [...new Set(allProducts.map(product => product.brand_name))]
+          .filter(brand => brand && brand !== 'Unknown Store')
+          .sort();
+
+        // Extract ALL unique stores from the products
+        const availableStores = [...new Set(allProducts.map(product => product.store_name))]
+          .filter(store => store && store.trim() !== '')
+          .sort();
+
+        // Return raw data, filtering will be done in the component
+        return { allProducts, availableBrands, availableStores };
+
+      } catch (fallbackError) {
+        console.error("Error in products query:", fallbackError);
+        return { allProducts: [], availableBrands: [], availableStores: [] };
+      }
+    },
+    // Keep data fresh for 5 minutes to avoid unnecessary refetches
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+// Helper function to apply filters client-side
+export const applyFilters = (
+  allProducts: ProductView[], 
   brandFilter?: string[], 
   priceRange?: { min: number; max: number },
   storeFilter?: string[]
 ) => {
-  return useQuery({
-    queryKey: ["products", searchQuery, sortBy, page, pageSize, brandFilter, priceRange, storeFilter],
-    queryFn: async (): Promise<ProductsResponse> => {
-      try {
-        console.log('=== STARTING PRODUCTS QUERY ===');
-        console.log('Query params:', { searchQuery, sortBy, page, pageSize, brandFilter, priceRange, storeFilter });
+  let filteredProducts = allProducts;
 
-        // Limit maximum records to 500 per request for data query only
-        const maxRecords = 500;
-        const limitedPageSize = Math.min(pageSize, maxRecords);
+  // Apply brand filter
+  if (brandFilter && brandFilter.length > 0) {
+    filteredProducts = filteredProducts.filter(product => {
+      return brandFilter.includes(product.brand_name);
+    });
+  }
 
-        // Helper function to apply search filter only (for counts and filters)
-        const applySearchFilter = (query: any) => {
-          if (searchQuery && searchQuery.trim()) {
-            console.log('Applying search filter for:', searchQuery);
-            query = query.ilike('title', `%${searchQuery.trim()}%`);
-          }
-          return query;
-        };
+  // Apply store filter
+  if (storeFilter && storeFilter.length > 0) {
+    filteredProducts = filteredProducts.filter(product => {
+      return storeFilter.includes(product.store_name);
+    });
+  }
 
-        // Helper function to apply all filters to a query
-        const applyAllFilters = (query: any) => {
-          query = applySearchFilter(query);
+  // Apply price range filter
+  if (priceRange && (priceRange.min > 0 || priceRange.max < 1000)) {
+    filteredProducts = filteredProducts.filter(product => {
+      const price = product.sale_price || 0;
+      return price >= priceRange.min && price <= priceRange.max;
+    });
+  }
 
-          // Apply brand filter
-          if (brandFilter && brandFilter.length > 0) {
-            console.log('Applying brand filter:', brandFilter);
-            query = query.in('brand_name', brandFilter);
-          }
-
-          // Apply store filter
-          if (storeFilter && storeFilter.length > 0) {
-            console.log('Applying store filter:', storeFilter);
-            query = query.in('store_name', storeFilter);
-          }
-
-          // Apply price range filter
-          if (priceRange && (priceRange.min > 0 || priceRange.max < 1000)) {
-            console.log('Applying price range filter:', priceRange);
-            query = query.gte('sale_price', priceRange.min).lte('sale_price', priceRange.max);
-          }
-
-          return query;
-        };
-
-        // 1. Get REAL total count - Fixed approach using select count
-        console.log('Getting REAL total count for filtered results...');
-        let totalCountQuery = supabase.from('offer_search').select('id', { count: 'exact' });
-        totalCountQuery = applyAllFilters(totalCountQuery);
-        totalCountQuery = totalCountQuery.limit(1); // We only need the count, not the data
-
-        const totalCountResult = await totalCountQuery;
-        const realTotalCount = totalCountResult.count || 0;
-        console.log('REAL total count for filtered results:', realTotalCount);
-
-        // 2. Get available filters based on search term only (limited to 500 for performance)
-        console.log('Getting available filters for search results...');
-        let allFiltersQuery = supabase.from('offer_search').select('brand_name, store_name, sale_price').limit(500);
-        allFiltersQuery = applySearchFilter(allFiltersQuery);
-
-        const allFiltersResult = await allFiltersQuery;
-        const { availableBrands: allBrands, availableStores: allStores } = extractUniqueFilters(allFiltersResult.data || []);
-
-        // 3. Get filtered brands based on selected stores (limited to 500 for performance)
-        console.log('Getting filtered brands based on selected stores...');
-        let filteredBrands = allBrands;
-        if (storeFilter && storeFilter.length > 0) {
-          let brandFilterQuery = supabase.from('offer_search').select('brand_name').limit(500);
-          brandFilterQuery = applySearchFilter(brandFilterQuery);
-          brandFilterQuery = brandFilterQuery.in('store_name', storeFilter);
-          
-          const brandFilterResult = await brandFilterQuery;
-          const { availableBrands } = extractUniqueFilters(brandFilterResult.data || []);
-          filteredBrands = availableBrands;
-        }
-
-        console.log('Available filters:', {
-          allBrands: allBrands.length,
-          filteredBrands: filteredBrands.length,
-          stores: allStores.length,
-          filteredByStores: storeFilter && storeFilter.length > 0
-        });
-
-        // 4. Get data with all filters applied (for current page)
-        let dataQuery = supabase.from('offer_search').select('*');
-        dataQuery = applyAllFilters(dataQuery);
-
-        // Apply sorting
-        switch (sortBy) {
-          case 'price-desc':
-            dataQuery = dataQuery.order('sale_price', { ascending: false });
-            break;
-          case 'price-asc':
-            dataQuery = dataQuery.order('sale_price', { ascending: true });
-            break;
-          case 'nome-desc':
-            dataQuery = dataQuery.order('title', { ascending: false });
-            break;
-          case 'nome-asc':
-          default:
-            dataQuery = dataQuery.order('title', { ascending: true });
-            break;
-        }
-
-        // Apply pagination with limited page size
-        const from = (page - 1) * limitedPageSize;
-        const to = from + limitedPageSize - 1;
-        dataQuery = dataQuery.range(from, to);
-
-        console.log('Executing data query with limited pagination:', { from, to, limitedPageSize });
-        const dataResult = await dataQuery;
-
-        console.log('Data query result:', {
-          error: dataResult.error,
-          dataLength: dataResult.data?.length,
-          status: dataResult.status
-        });
-
-        if (dataResult.error) {
-          console.error('Data query failed:', dataResult.error);
-          return { 
-            products: [], 
-            totalCount: realTotalCount, 
-            hasMore: false, 
-            availableBrands: filteredBrands, 
-            availableStores: allStores 
-          };
-        }
-
-        // Transform products
-        const products: ProductView[] = (dataResult.data || []).map(transformProductData);
-        console.log('Transformed products:', products.length);
-
-        // Calculate hasMore based on total vs current position
-        const currentPosition = (page - 1) * limitedPageSize + products.length;
-        const hasMore = products.length === limitedPageSize && currentPosition < realTotalCount;
-
-        const result = {
-          products,
-          totalCount: realTotalCount, // Use the REAL count here
-          hasMore,
-          availableBrands: filteredBrands,
-          availableStores: allStores
-        };
-
-        console.log('=== FINAL RESULT ===');
-        console.log('Products returned:', result.products.length);
-        console.log('REAL Total count:', result.totalCount);
-        console.log('Has more:', result.hasMore);
-        console.log('Available brands:', result.availableBrands.length);
-        console.log('Available stores:', result.availableStores.length);
-
-        return result;
-
-      } catch (error) {
-        console.error("CRITICAL ERROR in products query:", error);
-        return { products: [], totalCount: 0, hasMore: false, availableBrands: [], availableStores: [] };
-      }
-    },
-    staleTime: 5 * 60 * 1000,
-    retry: 1,
-    retryDelay: 1000,
-  });
+  return filteredProducts;
 };
-
-// Export types for external use
-export type { ProductView, ProductsResponse } from "@/types/product";

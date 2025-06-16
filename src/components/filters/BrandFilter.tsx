@@ -1,8 +1,6 @@
 
 import { FilterSection } from "./FilterSection";
 import { FilterItem } from "./FilterItem";
-import { FilterSkeleton } from "@/components/ui/skeleton";
-import { useFilterCounts } from "@/hooks/useFilterCounts";
 
 interface BrandFilterProps {
   availableBrands: string[];
@@ -10,9 +8,6 @@ interface BrandFilterProps {
   allProducts: any[];
   selectedStores: string[];
   onBrandToggle: (brand: string) => void;
-  isLoading?: boolean;
-  searchQuery?: string;
-  priceRange?: { min: number; max: number };
 }
 
 export const BrandFilter = ({
@@ -20,32 +15,44 @@ export const BrandFilter = ({
   selectedBrands,
   allProducts,
   selectedStores,
-  onBrandToggle,
-  isLoading = false,
-  searchQuery = "",
-  priceRange = { min: 0, max: 1000 }
+  onBrandToggle
 }: BrandFilterProps) => {
-  // Get real filter counts
-  const { data: filterCounts } = useFilterCounts({
-    searchQuery,
-    selectedStores,
-    selectedBrands: [],
-    priceRange
-  });
+  // Filter brands based on selected stores
+  const getFilteredBrands = () => {
+    if (selectedStores.length === 0) {
+      return availableBrands;
+    }
+    
+    // Get unique brands from products that belong to selected stores
+    const brandsInSelectedStores = [...new Set(
+      allProducts
+        .filter(product => selectedStores.includes(product.store_name))
+        .map(product => product.brand_name)
+        .filter(brand => brand && brand !== 'Unknown Store')
+    )].sort();
+    
+    return brandsInSelectedStores;
+  };
 
-  const { brandCounts = {} } = filterCounts || {};
+  const filteredBrands = getFilteredBrands();
 
-  // The availableBrands now comes filtered from the backend based on selected stores
-  // So we can use them directly without additional filtering
-  const filteredBrands = availableBrands;
-
-  // Get real product count for each brand
+  // Calculate product count for each brand considering current store filters
   const getBrandProductCount = (brand: string) => {
-    return brandCounts[brand] || 0;
+    let filteredProducts = allProducts.filter(product => product.brand_name === brand);
+    
+    // If stores are selected, also filter by stores
+    if (selectedStores.length > 0) {
+      filteredProducts = filteredProducts.filter(product => 
+        selectedStores.includes(product.store_name)
+      );
+    }
+    
+    return filteredProducts.length;
   };
 
   // Create ordered brand list with selected brands at the top, but only from filtered brands
   const getOrderedBrands = () => {
+    // Filter selected brands to only include those available in selected stores
     const validSelectedBrands = selectedBrands.filter(brand => 
       filteredBrands.includes(brand)
     );
@@ -63,14 +70,6 @@ export const BrandFilter = ({
 
   const orderedBrands = getOrderedBrands();
   const validSelectedBrands = selectedBrands.filter(brand => filteredBrands.includes(brand));
-
-  if (isLoading) {
-    return (
-      <FilterSection title="Marcas" showCount={false}>
-        <FilterSkeleton />
-      </FilterSection>
-    );
-  }
 
   return (
     <FilterSection 
