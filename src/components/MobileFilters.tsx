@@ -8,31 +8,37 @@ import { SearchControls } from "./SearchControls";
 
 interface MobileFiltersProps {
   onBrandChange: (brands: string[]) => void;
+  onStoreChange: (stores: string[]) => void;
   onPriceRangeChange: (range: { min: number; max: number }) => void;
   onClearFilters: () => void;
   onSortChange: (value: string) => void;
   onDisplayModeChange: (mode: 'grid' | 'list') => void;
   displayMode: 'grid' | 'list';
   availableBrands: string[];
+  availableStores: string[];
   searchQuery?: string;
   allProducts?: any[];
   activeFiltersCount: number;
   selectedBrands: string[];
+  selectedStores: string[];
   priceRange: { min: number; max: number };
 }
 
 export const MobileFilters = ({
   onBrandChange,
+  onStoreChange,
   onPriceRangeChange,
   onClearFilters,
   onSortChange,
   onDisplayModeChange,
   displayMode,
   availableBrands,
+  availableStores,
   searchQuery,
   allProducts,
   activeFiltersCount,
   selectedBrands,
+  selectedStores,
   priceRange
 }: MobileFiltersProps) => {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -61,15 +67,18 @@ export const MobileFilters = ({
               <div className="p-4">
                 <FilterSidebar
                   onBrandChange={onBrandChange}
+                  onStoreChange={onStoreChange}
                   onPriceRangeChange={onPriceRangeChange}
                   onClearFilters={() => {
                     onClearFilters();
                     setIsFiltersOpen(false);
                   }}
                   availableBrands={availableBrands}
+                  availableStores={availableStores}
                   searchQuery={searchQuery}
                   allProducts={allProducts}
                   selectedBrands={selectedBrands}
+                  selectedStores={selectedStores}
                   priceRange={priceRange}
                 />
               </div>

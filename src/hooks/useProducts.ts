@@ -55,7 +55,7 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
 
         if (error) {
           console.error("Error fetching from offer_search:", error);
-          return { allProducts: [], availableBrands: [] };
+          return { allProducts: [], availableBrands: [], availableStores: [] };
         }
 
         console.log('Raw data count from offer_search:', data?.length || 0);
@@ -88,15 +88,21 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
           .filter(brand => brand && brand !== 'Unknown Store')
           .sort();
 
+        // Extract ALL unique stores from the products
+        const availableStores = [...new Set(allProducts.map(product => product.store_name))]
+          .filter(store => store && store.trim() !== '')
+          .sort();
+
         console.log('All available brands:', availableBrands);
+        console.log('All available stores:', availableStores);
         console.log('Total products fetched:', allProducts.length);
 
         // Return raw data, filtering will be done in the component
-        return { allProducts, availableBrands };
+        return { allProducts, availableBrands, availableStores };
 
       } catch (fallbackError) {
         console.error("Error in products query:", fallbackError);
-        return { allProducts: [], availableBrands: [] };
+        return { allProducts: [], availableBrands: [], availableStores: [] };
       }
     },
     // Keep data fresh for 5 minutes to avoid unnecessary refetches
@@ -108,7 +114,8 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
 export const applyFilters = (
   allProducts: ProductView[], 
   brandFilter?: string[], 
-  priceRange?: { min: number; max: number }
+  priceRange?: { min: number; max: number },
+  storeFilter?: string[]
 ) => {
   let filteredProducts = allProducts;
 
@@ -117,20 +124,35 @@ export const applyFilters = (
     console.log('=== APPLYING BRAND FILTER ===');
     console.log('Selected brands:', brandFilter);
     
-    filteredProducts = allProducts.filter(product => {
+    filteredProducts = filteredProducts.filter(product => {
       const isIncluded = brandFilter.includes(product.brand_name);
       console.log(`Product: ${product.title}, Brand: ${product.brand_name}, Included: ${isIncluded}`);
       return isIncluded;
     });
     
-    console.log(`Filtered from ${allProducts.length} to ${filteredProducts.length} products`);
+    console.log(`Brand filter: ${allProducts.length} -> ${filteredProducts.length} products`);
+  }
+
+  // Apply store filter
+  if (storeFilter && storeFilter.length > 0) {
+    console.log('=== APPLYING STORE FILTER ===');
+    console.log('Selected stores:', storeFilter);
     
-    // Show count by brand for verification
-    const brandCounts = filteredProducts.reduce((acc, p) => {
-      acc[p.brand_name] = (acc[p.brand_name] || 0) + 1;
+    const beforeStoreFilter = filteredProducts.length;
+    filteredProducts = filteredProducts.filter(product => {
+      const isIncluded = storeFilter.includes(product.store_name);
+      console.log(`Product: ${product.title}, Store: ${product.store_name}, Included: ${isIncluded}`);
+      return isIncluded;
+    });
+    
+    console.log(`Store filter: ${beforeStoreFilter} -> ${filteredProducts.length} products`);
+    
+    // Show count by store for verification
+    const storeCounts = filteredProducts.reduce((acc, p) => {
+      acc[p.store_name] = (acc[p.store_name] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    console.log('Products by selected brands:', brandCounts);
+    console.log('Products by selected stores:', storeCounts);
   }
 
   // Apply price range filter

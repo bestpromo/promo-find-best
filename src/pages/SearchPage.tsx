@@ -19,6 +19,7 @@ const SearchPage = () => {
   const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
   const [visibleProducts, setVisibleProducts] = useState(PRODUCTS_PER_PAGE);
   const [brandFilter, setBrandFilter] = useState<string[]>([]);
+  const [storeFilter, setStoreFilter] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 1000 });
   
   const query = searchParams.get("q") || "";
@@ -27,12 +28,13 @@ const SearchPage = () => {
   
   const allProducts = data?.allProducts || [];
   const availableBrands = data?.availableBrands || [];
+  const availableStores = data?.availableStores || [];
 
   // Apply filters client-side
-  const filteredProducts = applyFilters(allProducts, brandFilter, priceRange);
+  const filteredProducts = applyFilters(allProducts, brandFilter, priceRange, storeFilter);
 
   // Calculate active filters count for mobile
-  const activeFiltersCount = brandFilter.length + 
+  const activeFiltersCount = brandFilter.length + storeFilter.length +
     (priceRange.min > 0 || priceRange.max < 1000 ? 1 : 0);
 
   // Reset filters when search query changes
@@ -40,6 +42,7 @@ const SearchPage = () => {
     console.log('Search query changed to:', query);
     console.log('Clearing all filters in SearchPage');
     setBrandFilter([]);
+    setStoreFilter([]);
     setPriceRange({ min: 0, max: 1000 });
     setVisibleProducts(PRODUCTS_PER_PAGE);
   }, [query]);
@@ -87,12 +90,18 @@ const SearchPage = () => {
 
   const handleClearFilters = () => {
     setBrandFilter([]);
+    setStoreFilter([]);
     setPriceRange({ min: 0, max: 1000 });
     setVisibleProducts(PRODUCTS_PER_PAGE);
   };
 
   const handleBrandFilterChange = (brands: string[]) => {
     setBrandFilter(brands);
+    setVisibleProducts(PRODUCTS_PER_PAGE); // Reset pagination when filter changes
+  };
+
+  const handleStoreFilterChange = (stores: string[]) => {
+    setStoreFilter(stores);
     setVisibleProducts(PRODUCTS_PER_PAGE); // Reset pagination when filter changes
   };
 
@@ -134,16 +143,19 @@ const SearchPage = () => {
         <div className="fixed top-[72px] left-0 right-0 z-40">
           <MobileFilters
             onBrandChange={handleBrandFilterChange}
+            onStoreChange={handleStoreFilterChange}
             onPriceRangeChange={handlePriceRangeChange}
             onClearFilters={handleClearFilters}
             onSortChange={setSortBy}
             onDisplayModeChange={setDisplayMode}
             displayMode={displayMode}
             availableBrands={availableBrands}
+            availableStores={availableStores}
             searchQuery={query}
             allProducts={allProducts}
             activeFiltersCount={activeFiltersCount}
             selectedBrands={brandFilter}
+            selectedStores={storeFilter}
             priceRange={priceRange}
           />
         </div>
@@ -167,12 +179,15 @@ const SearchPage = () => {
           {!isMobile && (
             <FilterSidebar
               onBrandChange={handleBrandFilterChange}
+              onStoreChange={handleStoreFilterChange}
               onPriceRangeChange={handlePriceRangeChange}
               onClearFilters={handleClearFilters}
               availableBrands={availableBrands}
+              availableStores={availableStores}
               searchQuery={query}
               allProducts={allProducts}
               selectedBrands={brandFilter}
+              selectedStores={storeFilter}
               priceRange={priceRange}
             />
           )}
@@ -189,6 +204,7 @@ const SearchPage = () => {
                   <p className="text-sm text-gray-600">
                     {sortedProducts.length} produtos encontrados
                     {brandFilter.length > 0 && ` • Marcas: ${brandFilter.join(', ')}`}
+                    {storeFilter.length > 0 && ` • Lojas: ${storeFilter.join(', ')}`}
                     {(priceRange.min > 0 || priceRange.max < 1000) && 
                       ` • Preço: R$ ${priceRange.min} - R$ ${priceRange.max}`
                     }

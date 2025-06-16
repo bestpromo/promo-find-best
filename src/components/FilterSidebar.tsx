@@ -9,32 +9,43 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface FilterSidebarProps {
   onBrandChange: (brands: string[]) => void;
+  onStoreChange: (stores: string[]) => void;
   onPriceRangeChange: (range: { min: number; max: number }) => void;
   onClearFilters: () => void;
   availableBrands: string[];
+  availableStores: string[];
   searchQuery?: string;
   allProducts?: any[];
   selectedBrands?: string[];
+  selectedStores?: string[];
   priceRange?: { min: number; max: number };
 }
 
 export const FilterSidebar = ({ 
-  onBrandChange, 
+  onBrandChange,
+  onStoreChange,
   onPriceRangeChange, 
   onClearFilters, 
   availableBrands,
+  availableStores,
   searchQuery,
   allProducts = [],
   selectedBrands = [],
+  selectedStores = [],
   priceRange = { min: 0, max: 1000 }
 }: FilterSidebarProps) => {
   const [localSelectedBrands, setLocalSelectedBrands] = useState<string[]>(selectedBrands);
+  const [localSelectedStores, setLocalSelectedStores] = useState<string[]>(selectedStores);
   const [localPriceRange, setLocalPriceRange] = useState([priceRange.min, priceRange.max]);
 
   // Sync with parent state
   useEffect(() => {
     setLocalSelectedBrands(selectedBrands);
   }, [selectedBrands]);
+
+  useEffect(() => {
+    setLocalSelectedStores(selectedStores);
+  }, [selectedStores]);
 
   useEffect(() => {
     setLocalPriceRange([priceRange.min, priceRange.max]);
@@ -44,12 +55,18 @@ export const FilterSidebar = ({
   useEffect(() => {
     console.log('FilterSidebar: Search query changed, resetting filters');
     setLocalSelectedBrands([]);
+    setLocalSelectedStores([]);
     setLocalPriceRange([0, 1000]);
   }, [searchQuery]);
 
   // Calculate product count for each brand
   const getBrandProductCount = (brand: string) => {
     return allProducts.filter(product => product.brand_name === brand).length;
+  };
+
+  // Calculate product count for each store
+  const getStoreProductCount = (store: string) => {
+    return allProducts.filter(product => product.store_name === store).length;
   };
 
   // RULE 4: Create ordered brand list with selected brands at the top
@@ -67,6 +84,21 @@ export const FilterSidebar = ({
     return [...localSelectedBrands, ...unselectedBrands];
   };
 
+  // RULE 4: Create ordered store list with selected stores at the top
+  const getOrderedStores = () => {
+    if (localSelectedStores.length === 0) {
+      // No stores selected, show all stores in alphabetical order
+      return availableStores;
+    }
+    
+    // Show selected stores first (in selection order), then unselected stores alphabetically
+    const unselectedStores = availableStores
+      .filter(store => !localSelectedStores.includes(store))
+      .sort();
+    
+    return [...localSelectedStores, ...unselectedStores];
+  };
+
   const handleBrandToggle = (brand: string) => {
     console.log('=== BRAND TOGGLE ===');
     console.log('Toggling brand:', brand);
@@ -82,6 +114,21 @@ export const FilterSidebar = ({
     onBrandChange(newSelectedBrands);
   };
 
+  const handleStoreToggle = (store: string) => {
+    console.log('=== STORE TOGGLE ===');
+    console.log('Toggling store:', store);
+    console.log('Current selected stores:', localSelectedStores);
+    
+    const newSelectedStores = localSelectedStores.includes(store)
+      ? localSelectedStores.filter(s => s !== store)
+      : [...localSelectedStores, store];
+    
+    console.log('New selected stores:', newSelectedStores);
+    
+    setLocalSelectedStores(newSelectedStores);
+    onStoreChange(newSelectedStores);
+  };
+
   const handlePriceChange = (values: number[]) => {
     setLocalPriceRange(values);
     onPriceRangeChange({ min: values[0], max: values[1] });
@@ -90,11 +137,13 @@ export const FilterSidebar = ({
   const handleClearFilters = () => {
     console.log('Clearing all filters');
     setLocalSelectedBrands([]);
+    setLocalSelectedStores([]);
     setLocalPriceRange([0, 1000]);
     onClearFilters();
   };
 
   const orderedBrands = getOrderedBrands();
+  const orderedStores = getOrderedStores();
 
   return (
     <div className="w-64 space-y-6">
@@ -159,6 +208,59 @@ export const FilterSidebar = ({
                   })
                 ) : (
                   <p className="text-sm text-gray-500 p-2">Nenhuma marca encontrada</p>
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+
+          {/* Store Filter */}
+          <div>
+            <Label className="text-sm font-medium mb-3 block">
+              Loja {localSelectedStores.length > 0 && `(${localSelectedStores.length} selecionadas)`}
+            </Label>
+            <ScrollArea className="h-80 w-full rounded-md border p-2">
+              <div className="space-y-2">
+                {orderedStores.length > 0 ? (
+                  orderedStores.map((store) => {
+                    const isSelected = localSelectedStores.includes(store);
+                    const productCount = getStoreProductCount(store);
+                    return (
+                      <div 
+                        key={store} 
+                        className={`flex items-center space-x-2 p-2 rounded-md transition-colors ${
+                          isSelected ? 'bg-green-50 border border-green-200' : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        <Checkbox
+                          id={store}
+                          checked={isSelected}
+                          onCheckedChange={() => handleStoreToggle(store)}
+                        />
+                        <div className="flex items-center justify-between w-full">
+                          <Label 
+                            htmlFor={store} 
+                            className={`text-sm cursor-pointer ${
+                              isSelected ? 'font-medium text-green-700' : ''
+                            }`}
+                          >
+                            {store}
+                          </Label>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500">
+                              ({productCount})
+                            </span>
+                            {isSelected && (
+                              <span className="text-xs bg-green-500 text-white px-2 py-1 rounded-full">
+                                {localSelectedStores.indexOf(store) + 1}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-sm text-gray-500 p-2">Nenhuma loja encontrada</p>
                 )}
               </div>
             </ScrollArea>
