@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ExternalLink } from "lucide-react";
@@ -167,7 +166,7 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
         </Button>
         <div className="flex items-center justify-center gap-1">
           <span className="text-xs font-bold text-gray-600">
-            Vendido por: {storeName}
+            Parceiro: {storeName}
           </span>
           <Check className="h-3 w-3 text-green-500" />
         </div>
