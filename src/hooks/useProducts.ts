@@ -58,14 +58,15 @@ export const useProducts = (
           return query;
         };
 
-        // 1. Get REAL total count using proper count query (no LIMIT!)
-        console.log('Getting REAL total count for search results...');
-        let totalCountQuery = supabase.from('offer_search').select('*', { count: 'exact', head: true });
-        totalCountQuery = applySearchFilter(totalCountQuery);
+        // 1. Get REAL total count - Fixed approach using select count
+        console.log('Getting REAL total count for filtered results...');
+        let totalCountQuery = supabase.from('offer_search').select('id', { count: 'exact' });
+        totalCountQuery = applyAllFilters(totalCountQuery);
+        totalCountQuery = totalCountQuery.limit(1); // We only need the count, not the data
 
         const totalCountResult = await totalCountQuery;
         const realTotalCount = totalCountResult.count || 0;
-        console.log('REAL total count for search term:', realTotalCount);
+        console.log('REAL total count for filtered results:', realTotalCount);
 
         // 2. Get available filters based on search term only (limited to 500 for performance)
         console.log('Getting available filters for search results...');
