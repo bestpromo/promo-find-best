@@ -33,7 +33,7 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
         let query = supabase
           .from('offer_search')
           .select('*')
-          .limit(2000);
+          .limit(1500);
 
         if (searchQuery) {
           const searchTerms = searchQuery.trim().split(/\s+/);
