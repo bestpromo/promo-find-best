@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,6 +36,19 @@ export const FilterSidebar = ({
   const [localSelectedBrands, setLocalSelectedBrands] = useState<string[]>(selectedBrands);
   const [localSelectedStores, setLocalSelectedStores] = useState<string[]>(selectedStores);
   const [localPriceRange, setLocalPriceRange] = useState([priceRange.min, priceRange.max]);
+
+  // Add debug logs for stores
+  useEffect(() => {
+    console.log('=== FILTER SIDEBAR DEBUG ===');
+    console.log('availableStores:', availableStores);
+    console.log('availableStores length:', availableStores.length);
+    console.log('allProducts sample (first 3):', allProducts.slice(0, 3).map(p => ({
+      title: p.title,
+      store_name: p.store_name,
+      brand_name: p.brand_name
+    })));
+    console.log('Unique store_names from products:', [...new Set(allProducts.map(p => p.store_name))]);
+  }, [availableStores, allProducts]);
 
   // Sync with parent state
   useEffect(() => {
@@ -161,6 +173,10 @@ export const FilterSidebar = ({
   const orderedBrands = getOrderedBrands();
   const orderedStores = getOrderedStores();
 
+  console.log('=== RENDER DEBUG ===');
+  console.log('orderedStores:', orderedStores);
+  console.log('orderedStores length:', orderedStores.length);
+
   return (
     <div className="w-64 space-y-6">
       <Card>
@@ -236,8 +252,10 @@ export const FilterSidebar = ({
             </Label>
             <ScrollArea className="h-80 w-full rounded-md border p-2">
               <div className="space-y-2">
+                {console.log('Rendering stores section, orderedStores:', orderedStores)}
                 {orderedStores.length > 0 ? (
                   orderedStores.map((store) => {
+                    console.log('Rendering store:', store);
                     const isSelected = localSelectedStores.includes(store);
                     const productCount = getStoreProductCount(store);
                     return (
@@ -276,7 +294,13 @@ export const FilterSidebar = ({
                     );
                   })
                 ) : (
-                  <p className="text-sm text-gray-500 p-2">Nenhuma loja encontrada</p>
+                  <div>
+                    {console.log('No stores to show, debugging info:')}
+                    {console.log('availableStores:', availableStores)}
+                    {console.log('orderedStores:', orderedStores)}
+                    <p className="text-sm text-gray-500 p-2">Nenhuma loja encontrada</p>
+                    <p className="text-xs text-red-500 p-2">Debug: availableStores = {availableStores.length}</p>
+                  </div>
                 )}
               </div>
             </ScrollArea>
