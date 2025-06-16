@@ -2,6 +2,7 @@
 import { FilterSection } from "./FilterSection";
 import { FilterItem } from "./FilterItem";
 import { FilterSkeleton } from "@/components/ui/skeleton";
+import { useFilterCounts } from "@/hooks/useFilterCounts";
 
 interface BrandFilterProps {
   availableBrands: string[];
@@ -11,6 +12,7 @@ interface BrandFilterProps {
   onBrandToggle: (brand: string) => void;
   isLoading?: boolean;
   searchQuery?: string;
+  priceRange?: { min: number; max: number };
 }
 
 export const BrandFilter = ({
@@ -20,15 +22,26 @@ export const BrandFilter = ({
   selectedStores,
   onBrandToggle,
   isLoading = false,
-  searchQuery
+  searchQuery = "",
+  priceRange = { min: 0, max: 1000 }
 }: BrandFilterProps) => {
+  // Get real filter counts
+  const { data: filterCounts } = useFilterCounts({
+    searchQuery,
+    selectedStores,
+    selectedBrands: [],
+    priceRange
+  });
+
+  const { brandCounts = {} } = filterCounts || {};
+
   // The availableBrands now comes filtered from the backend based on selected stores
   // So we can use them directly without additional filtering
   const filteredBrands = availableBrands;
 
-  // For now, show a generic count since we don't have the full dataset
+  // Get real product count for each brand
   const getBrandProductCount = (brand: string) => {
-    return "..."; // Placeholder until we implement real counts
+    return brandCounts[brand] || 0;
   };
 
   // Create ordered brand list with selected brands at the top, but only from filtered brands

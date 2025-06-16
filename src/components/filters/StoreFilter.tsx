@@ -2,6 +2,7 @@
 import { FilterSection } from "./FilterSection";
 import { FilterItem } from "./FilterItem";
 import { FilterSkeleton } from "@/components/ui/skeleton";
+import { useFilterCounts } from "@/hooks/useFilterCounts";
 
 interface StoreFilterProps {
   availableStores: string[];
@@ -10,6 +11,8 @@ interface StoreFilterProps {
   onStoreToggle: (store: string) => void;
   isLoading?: boolean;
   searchQuery?: string;
+  selectedBrands?: string[];
+  priceRange?: { min: number; max: number };
 }
 
 export const StoreFilter = ({
@@ -18,14 +21,23 @@ export const StoreFilter = ({
   allProducts,
   onStoreToggle,
   isLoading = false,
-  searchQuery
+  searchQuery = "",
+  selectedBrands = [],
+  priceRange = { min: 0, max: 1000 }
 }: StoreFilterProps) => {
-  // For now, show a generic count since we don't have the full dataset
-  // This will be improved when we get the full filter data from the backend
+  // Get real filter counts
+  const { data: filterCounts } = useFilterCounts({
+    searchQuery,
+    selectedStores: [],
+    selectedBrands,
+    priceRange
+  });
+
+  const { storeCounts = {} } = filterCounts || {};
+
+  // Get real product count for each store
   const getStoreProductCount = (store: string) => {
-    // Show a meaningful count - this could be enhanced to show real counts
-    // from a separate API call if needed
-    return "..."; // Placeholder until we implement real counts
+    return storeCounts[store] || 0;
   };
 
   // Create ordered store list with selected stores at the top

@@ -133,6 +133,9 @@ export const FilterSidebar = ({
             allProducts={allProducts}
             onStoreToggle={handleStoreToggle}
             isLoading={isLoading}
+            searchQuery={searchQuery}
+            selectedBrands={localSelectedBrands}
+            priceRange={priceRange}
           />
 
           {/* 2. Brand Filter - Second, considers store selection */}
@@ -143,6 +146,8 @@ export const FilterSidebar = ({
             selectedStores={localSelectedStores}
             onBrandToggle={handleBrandToggle}
             isLoading={isLoading}
+            searchQuery={searchQuery}
+            priceRange={priceRange}
           />
 
           {/* 3. Price Range Filter - Third, considers store and brand selection */}
