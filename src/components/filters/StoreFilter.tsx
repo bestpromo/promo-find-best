@@ -6,7 +6,6 @@ interface StoreFilterProps {
   availableStores: string[];
   selectedStores: string[];
   allProducts: any[];
-  selectedBrands: string[];
   onStoreToggle: (store: string) => void;
 }
 
@@ -14,24 +13,15 @@ export const StoreFilter = ({
   availableStores,
   selectedStores,
   allProducts,
-  selectedBrands,
   onStoreToggle
 }: StoreFilterProps) => {
   console.log('=== STORE FILTER DEBUG ===');
   console.log('availableStores:', availableStores);
   console.log('availableStores length:', availableStores.length);
 
-  // Calculate product count for each store considering current brand filters
+  // Calculate product count for each store (independent of other filters)
   const getStoreProductCount = (store: string) => {
-    let filteredProducts = allProducts.filter(product => product.store_name === store);
-    
-    // If brands are selected, also filter by brands
-    if (selectedBrands.length > 0) {
-      filteredProducts = filteredProducts.filter(product => 
-        selectedBrands.includes(product.brand_name)
-      );
-    }
-    
+    const filteredProducts = allProducts.filter(product => product.store_name === store);
     return filteredProducts.length;
   };
 
@@ -55,10 +45,8 @@ export const StoreFilter = ({
 
   return (
     <FilterSection title="Loja" selectedCount={selectedStores.length}>
-      {console.log('Rendering stores section, orderedStores:', orderedStores)}
       {orderedStores.length > 0 ? (
         orderedStores.map((store) => {
-          console.log('Rendering store:', store);
           const isSelected = selectedStores.includes(store);
           const productCount = getStoreProductCount(store);
           return (
@@ -76,9 +64,6 @@ export const StoreFilter = ({
         })
       ) : (
         <div>
-          {console.log('No stores to show, debugging info:')}
-          {console.log('availableStores:', availableStores)}
-          {console.log('orderedStores:', orderedStores)}
           <p className="text-sm text-gray-500 p-2">Nenhuma loja encontrada</p>
           <p className="text-xs text-red-500 p-2">Debug: availableStores = {availableStores.length}</p>
         </div>

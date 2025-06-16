@@ -131,6 +131,15 @@ export const FilterSidebar = ({
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* 1. Store Filter - First and independent */}
+          <StoreFilter
+            availableStores={availableStores}
+            selectedStores={localSelectedStores}
+            allProducts={allProducts}
+            onStoreToggle={handleStoreToggle}
+          />
+
+          {/* 2. Brand Filter - Second, considers store selection */}
           <BrandFilter
             availableBrands={availableBrands}
             selectedBrands={localSelectedBrands}
@@ -139,14 +148,7 @@ export const FilterSidebar = ({
             onBrandToggle={handleBrandToggle}
           />
 
-          <StoreFilter
-            availableStores={availableStores}
-            selectedStores={localSelectedStores}
-            allProducts={allProducts}
-            selectedBrands={localSelectedBrands}
-            onStoreToggle={handleStoreToggle}
-          />
-
+          {/* 3. Price Range Filter - Third, considers store and brand selection */}
           <PriceRangeFilter
             priceRange={localPriceRange}
             onPriceChange={handlePriceChange}
