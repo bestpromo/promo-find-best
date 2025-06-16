@@ -13,7 +13,7 @@ export const createBaseQuery = (filters: ProductFilters) => {
     const searchTerm = searchQuery.trim().toLowerCase();
     console.log('Adding search filter for term:', searchTerm);
     
-    // Use ilike for case-insensitive pattern matching
+    // Try a simpler approach first - just search in title
     query = query.ilike('title', `%${searchTerm}%`);
   }
 
@@ -102,6 +102,15 @@ export const createTestQuery = () => {
     .from('offer_search')
     .select('offer_id, title, brand_name, store_name, sale_price')
     .limit(5);
+};
+
+// New: Simple query to check table structure and get sample data
+export const createDebugQuery = () => {
+  console.log('Creating debug query to check table structure');
+  return supabase
+    .from('offer_search')
+    .select('*')
+    .limit(3);
 };
 
 // Query for getting ALL available filters (not limited)

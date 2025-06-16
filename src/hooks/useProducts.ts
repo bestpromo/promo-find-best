@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type { ProductView, ProductsResponse, ProductFilters } from "@/types/product";
-import { createDataQuery, createFiltersQuery, createTestQuery, createCountQuery } from "@/utils/productQueries";
+import { createDataQuery, createFiltersQuery, createTestQuery, createCountQuery, createDebugQuery } from "@/utils/productQueries";
 import { transformProductData, extractUniqueFilters } from "@/utils/productTransformers";
 
 export const useProducts = (
@@ -20,13 +20,13 @@ export const useProducts = (
         console.log('=== STARTING PRODUCTS QUERY ===');
         console.log('Query params:', { searchQuery, sortBy, page, pageSize, brandFilter, priceRange, storeFilter });
 
-        // First, test basic connectivity
-        console.log('Testing database connectivity...');
-        const testResult = await createTestQuery();
-        console.log('Test query result:', testResult);
+        // First, test basic connectivity and table structure
+        console.log('Testing database connectivity and getting sample data...');
+        const debugResult = await createDebugQuery();
+        console.log('Debug query result:', debugResult);
         
-        if (testResult.error) {
-          console.error('Database connectivity test failed:', testResult.error);
+        if (debugResult.error) {
+          console.error('Database debug test failed:', debugResult.error);
           return { 
             products: [], 
             totalCount: 0, 
@@ -36,7 +36,26 @@ export const useProducts = (
           };
         }
 
-        console.log('Database connectivity OK, found', testResult.data?.length || 0, 'test records');
+        console.log('Database connectivity OK, sample data:', debugResult.data);
+        console.log('Sample record structure:', debugResult.data?.[0]);
+
+        // Test basic query without search
+        console.log('Testing basic query without search...');
+        const testResult = await createTestQuery();
+        console.log('Test query result:', testResult);
+        
+        if (testResult.error) {
+          console.error('Basic query test failed:', testResult.error);
+          return { 
+            products: [], 
+            totalCount: 0, 
+            hasMore: false, 
+            availableBrands: [], 
+            availableStores: [] 
+          };
+        }
+
+        console.log('Basic query OK, found', testResult.data?.length || 0, 'test records');
 
         const filters: ProductFilters = {
           searchQuery,
@@ -48,7 +67,33 @@ export const useProducts = (
           storeFilter
         };
 
+        // If no search query, try to get all products first
+        if (!searchQuery || !searchQuery.trim()) {
+          console.log('No search query provided, getting all products...');
+          
+          // Create a simple query for all products
+          const allProductsQuery = createDataQuery({
+            ...filters,
+            searchQuery: '' // Remove search query
+          });
+          
+          const allProductsResult = await allProductsQuery;
+          console.log('All products query result:', allProductsResult);
+          
+          if (allProductsResult.data) {
+            const products: ProductView[] = allProductsResult.data.map(transformProductData);
+            return {
+              products,
+              totalCount: products.length,
+              hasMore: false,
+              availableBrands: [],
+              availableStores: []
+            };
+          }
+        }
+
         // Create queries
+        console.log('Creating filtered queries...');
         const dataQuery = createDataQuery(filters);
         const countQuery = createCountQuery(filters);
         const filtersQuery = createFiltersQuery(filters);
@@ -72,6 +117,7 @@ export const useProducts = (
 
         if (dataResult.error) {
           console.error("Data query error:", dataResult.error);
+          console.error("Data query details:", dataResult);
           return { 
             products: [], 
             totalCount: 0, 
