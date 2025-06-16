@@ -201,6 +201,7 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
         onClose={() => setIsShareModalOpen(false)}
         productName={name}
         shareUrl={shareUrl}
+        product={product}
       />
     </>
   );
