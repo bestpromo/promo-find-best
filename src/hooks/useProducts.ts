@@ -4,13 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 
 // Define a type for our products view
 export type ProductView = {
-  id: number;
-  nome: string;
-  description: string | null;
-  url: string | null;
-  photo: string | null;
-  price: number | null;
-  loja_nome: string | null;
+  offer_id: string;
+  title: string;
+  url_slug: string;
+  deep_link_url: string;
+  brand_name: string;
+  image_url: string;
+  sale_price: number | null;
+  promotional_price: number | null;
 };
 
 export const useProducts = (searchQuery: string, sortBy: string) => {
