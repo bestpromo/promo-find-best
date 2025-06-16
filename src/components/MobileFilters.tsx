@@ -38,7 +38,7 @@ export const MobileFilters = ({
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   return (
-    <div className="sticky top-0 z-40 bg-white border-b shadow-sm">
+    <div className="bg-white border-b shadow-sm">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between gap-3">
           {/* Filtros Button */}

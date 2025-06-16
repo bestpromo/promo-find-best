@@ -113,7 +113,8 @@ const SearchPage = () => {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b">
+      {/* Fixed Header */}
+      <header className={`border-b bg-white z-50 ${isMobile ? 'fixed top-0 left-0 right-0' : ''}`}>
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-8">
             <Link to="/">
@@ -128,22 +129,24 @@ const SearchPage = () => {
         </div>
       </header>
       
-      {/* Mobile Filters - Only show on small screens */}
+      {/* Mobile Filters - Fixed below header */}
       {isMobile && (
-        <MobileFilters
-          onBrandChange={handleBrandFilterChange}
-          onPriceRangeChange={handlePriceRangeChange}
-          onClearFilters={handleClearFilters}
-          onSortChange={setSortBy}
-          onDisplayModeChange={setDisplayMode}
-          displayMode={displayMode}
-          availableBrands={availableBrands}
-          searchQuery={query}
-          allProducts={allProducts}
-          activeFiltersCount={activeFiltersCount}
-          selectedBrands={brandFilter}
-          priceRange={priceRange}
-        />
+        <div className="fixed top-[72px] left-0 right-0 z-40">
+          <MobileFilters
+            onBrandChange={handleBrandFilterChange}
+            onPriceRangeChange={handlePriceRangeChange}
+            onClearFilters={handleClearFilters}
+            onSortChange={setSortBy}
+            onDisplayModeChange={setDisplayMode}
+            displayMode={displayMode}
+            availableBrands={availableBrands}
+            searchQuery={query}
+            allProducts={allProducts}
+            activeFiltersCount={activeFiltersCount}
+            selectedBrands={brandFilter}
+            priceRange={priceRange}
+          />
+        </div>
       )}
 
       {/* Desktop Controls - Only show on larger screens */}
@@ -157,7 +160,8 @@ const SearchPage = () => {
         </div>
       )}
 
-      <main className="container mx-auto px-4 py-8">
+      {/* Main Content with appropriate padding */}
+      <main className={`container mx-auto px-4 py-8 ${isMobile ? 'pt-[140px]' : ''}`}>
         <div className="flex gap-6">
           {/* Desktop Filter Sidebar - Only show on larger screens */}
           {!isMobile && (
