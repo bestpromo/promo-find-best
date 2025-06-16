@@ -73,6 +73,33 @@ export const FilterSidebar = ({
     }
   }, [searchQuery]);
 
+  // Clean up selected brands when stores change
+  useEffect(() => {
+    if (localSelectedStores.length > 0) {
+      // Get brands available in selected stores
+      const brandsInSelectedStores = [...new Set(
+        allProducts
+          .filter(product => localSelectedStores.includes(product.store_name))
+          .map(product => product.brand_name)
+          .filter(brand => brand && brand !== 'Unknown Store')
+      )];
+
+      // Filter selected brands to only include those available in selected stores
+      const validSelectedBrands = localSelectedBrands.filter(brand => 
+        brandsInSelectedStores.includes(brand)
+      );
+
+      // If some brands were removed, update the selection
+      if (validSelectedBrands.length !== localSelectedBrands.length) {
+        console.log('Cleaning up selected brands based on store selection');
+        console.log('Previous selected brands:', localSelectedBrands);
+        console.log('Valid selected brands:', validSelectedBrands);
+        setLocalSelectedBrands(validSelectedBrands);
+        onBrandChange(validSelectedBrands);
+      }
+    }
+  }, [localSelectedStores, allProducts]);
+
   const handleBrandToggle = (brand: string) => {
     console.log('=== BRAND TOGGLE ===');
     console.log('Toggling brand:', brand);

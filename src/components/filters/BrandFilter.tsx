@@ -17,6 +17,30 @@ export const BrandFilter = ({
   selectedStores,
   onBrandToggle
 }: BrandFilterProps) => {
+  // Filter brands based on selected stores
+  const getFilteredBrands = () => {
+    if (selectedStores.length === 0) {
+      return availableBrands;
+    }
+    
+    // Get unique brands from products that belong to selected stores
+    const brandsInSelectedStores = [...new Set(
+      allProducts
+        .filter(product => selectedStores.includes(product.store_name))
+        .map(product => product.brand_name)
+        .filter(brand => brand && brand !== 'Unknown Store')
+    )].sort();
+    
+    console.log('=== BRAND FILTER STORE DEPENDENCY ===');
+    console.log('Selected stores:', selectedStores);
+    console.log('All available brands:', availableBrands);
+    console.log('Brands in selected stores:', brandsInSelectedStores);
+    
+    return brandsInSelectedStores;
+  };
+
+  const filteredBrands = getFilteredBrands();
+
   // Calculate product count for each brand considering current store filters
   const getBrandProductCount = (brand: string) => {
     let filteredProducts = allProducts.filter(product => product.brand_name === brand);
@@ -31,23 +55,28 @@ export const BrandFilter = ({
     return filteredProducts.length;
   };
 
-  // Create ordered brand list with selected brands at the top
+  // Create ordered brand list with selected brands at the top, but only from filtered brands
   const getOrderedBrands = () => {
-    if (selectedBrands.length === 0) {
-      return availableBrands.sort();
+    // Filter selected brands to only include those available in selected stores
+    const validSelectedBrands = selectedBrands.filter(brand => 
+      filteredBrands.includes(brand)
+    );
+    
+    if (validSelectedBrands.length === 0) {
+      return filteredBrands.sort();
     }
     
-    const unselectedBrands = availableBrands
-      .filter(brand => !selectedBrands.includes(brand))
+    const unselectedBrands = filteredBrands
+      .filter(brand => !validSelectedBrands.includes(brand))
       .sort();
     
-    return [...selectedBrands, ...unselectedBrands];
+    return [...validSelectedBrands, ...unselectedBrands];
   };
 
   const orderedBrands = getOrderedBrands();
 
   return (
-    <FilterSection title="Marcas" selectedCount={selectedBrands.length}>
+    <FilterSection title="Marcas" selectedCount={selectedBrands.filter(brand => filteredBrands.includes(brand)).length}>
       {orderedBrands.length > 0 ? (
         orderedBrands.map((brand) => {
           const isSelected = selectedBrands.includes(brand);
@@ -66,7 +95,12 @@ export const BrandFilter = ({
           );
         })
       ) : (
-        <p className="text-sm text-gray-500 p-2">Nenhuma marca encontrada</p>
+        <p className="text-sm text-gray-500 p-2">
+          {selectedStores.length > 0 
+            ? "Nenhuma marca encontrada nos parceiros selecionados" 
+            : "Nenhuma marca encontrada"
+          }
+        </p>
       )}
     </FilterSection>
   );
