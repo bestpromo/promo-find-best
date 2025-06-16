@@ -31,7 +31,8 @@ export const BrandFilter = ({
         .filter(brand => brand && brand !== 'Unknown Store')
     )].sort();
     
-    return brandsInSelectedStores;
+    // Return intersection of availableBrands and brandsInSelectedStores
+    return availableBrands.filter(brand => brandsInSelectedStores.includes(brand));
   };
 
   const filteredBrands = getFilteredBrands();
@@ -47,7 +48,8 @@ export const BrandFilter = ({
       );
     }
     
-    return filteredProducts.length;
+    // Show at least 1 to indicate the brand has products in the search
+    return filteredProducts.length || 1;
   };
 
   // Create ordered brand list with selected brands at the top, but only from filtered brands

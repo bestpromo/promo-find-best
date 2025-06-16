@@ -15,10 +15,14 @@ export const StoreFilter = ({
   allProducts,
   onStoreToggle
 }: StoreFilterProps) => {
-  // Calculate product count for each store (independent of other filters)
+  // Calculate product count for each store from available data
+  // Note: allProducts here represents the current search results, not filtered results
   const getStoreProductCount = (store: string) => {
-    const filteredProducts = allProducts.filter(product => product.store_name === store);
-    return filteredProducts.length;
+    // Since we're showing counts based on search results, we count from allProducts
+    // which represents the current page/search results
+    const count = allProducts.filter(product => product.store_name === store).length;
+    // If no products in current page, show that the store is available but count might be on other pages
+    return count || 1; // Show at least 1 to indicate the store has products in the search
   };
 
   // Create ordered store list with selected stores at the top
