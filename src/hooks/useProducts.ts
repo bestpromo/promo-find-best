@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -105,7 +106,7 @@ export const useProducts = (
         let countQuery = supabase
           .from('offer_search')
           .select('offer_id', { count: 'exact', head: true })
-          .limit(5000); // Limit total count query to prevent timeout
+          .limit(1000); // Limit total count query to prevent timeout
 
         // Apply same filters to count query
         if (searchQuery) {
