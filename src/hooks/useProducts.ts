@@ -20,7 +20,7 @@ export const useProducts = (
         console.log('=== STARTING PRODUCTS QUERY ===');
         console.log('Query params:', { searchQuery, sortBy, page, pageSize, brandFilter, priceRange, storeFilter });
 
-        // Limit maximum records to 500 per request
+        // Limit maximum records to 500 per request for data query only
         const maxRecords = 500;
         const limitedPageSize = Math.min(pageSize, maxRecords);
 
@@ -58,19 +58,28 @@ export const useProducts = (
           return query;
         };
 
-        // 1. Get available filters based on search term only (all products matching search)
-        console.log('Getting available filters for all search results...');
-        let allFiltersQuery = supabase.from('offer_search').select('brand_name, store_name, sale_price').limit(5000);
+        // 1. Get REAL total count using proper count query (no LIMIT!)
+        console.log('Getting REAL total count for search results...');
+        let totalCountQuery = supabase.from('offer_search').select('*', { count: 'exact', head: true });
+        totalCountQuery = applySearchFilter(totalCountQuery);
+
+        const totalCountResult = await totalCountQuery;
+        const realTotalCount = totalCountResult.count || 0;
+        console.log('REAL total count for search term:', realTotalCount);
+
+        // 2. Get available filters based on search term only (using limited query for performance)
+        console.log('Getting available filters for search results...');
+        let allFiltersQuery = supabase.from('offer_search').select('brand_name, store_name, sale_price').limit(10000);
         allFiltersQuery = applySearchFilter(allFiltersQuery);
 
         const allFiltersResult = await allFiltersQuery;
         const { availableBrands: allBrands, availableStores: allStores } = extractUniqueFilters(allFiltersResult.data || []);
 
-        // 2. Get filtered brands based on selected stores
+        // 3. Get filtered brands based on selected stores
         console.log('Getting filtered brands based on selected stores...');
         let filteredBrands = allBrands;
         if (storeFilter && storeFilter.length > 0) {
-          let brandFilterQuery = supabase.from('offer_search').select('brand_name').limit(5000);
+          let brandFilterQuery = supabase.from('offer_search').select('brand_name').limit(10000);
           brandFilterQuery = applySearchFilter(brandFilterQuery);
           brandFilterQuery = brandFilterQuery.in('store_name', storeFilter);
           
@@ -85,11 +94,6 @@ export const useProducts = (
           stores: allStores.length,
           filteredByStores: storeFilter && storeFilter.length > 0
         });
-
-        // 3. Get total count for search results only (not filtered)
-        console.log('Getting total count for search results...');
-        const totalCountData = allFiltersResult.data?.length || 0;
-        console.log('Total count for search term:', totalCountData);
 
         // 4. Get data with all filters applied (for current page)
         let dataQuery = supabase.from('offer_search').select('*');
@@ -130,7 +134,7 @@ export const useProducts = (
           console.error('Data query failed:', dataResult.error);
           return { 
             products: [], 
-            totalCount: totalCountData, 
+            totalCount: realTotalCount, 
             hasMore: false, 
             availableBrands: filteredBrands, 
             availableStores: allStores 
@@ -143,11 +147,11 @@ export const useProducts = (
 
         // Calculate hasMore based on total vs current position
         const currentPosition = (page - 1) * limitedPageSize + products.length;
-        const hasMore = products.length === limitedPageSize && currentPosition < totalCountData;
+        const hasMore = products.length === limitedPageSize && currentPosition < realTotalCount;
 
         const result = {
           products,
-          totalCount: totalCountData,
+          totalCount: realTotalCount, // Use the REAL count here
           hasMore,
           availableBrands: filteredBrands,
           availableStores: allStores
@@ -155,7 +159,7 @@ export const useProducts = (
 
         console.log('=== FINAL RESULT ===');
         console.log('Products returned:', result.products.length);
-        console.log('Total count:', result.totalCount);
+        console.log('REAL Total count:', result.totalCount);
         console.log('Has more:', result.hasMore);
         console.log('Available brands:', result.availableBrands.length);
         console.log('Available stores:', result.availableStores.length);
