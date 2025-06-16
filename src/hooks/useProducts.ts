@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -102,8 +103,8 @@ export const useProducts = (
         const to = from + pageSize - 1;
         dataQuery = dataQuery.range(from, to);
 
-        // Count query - same filters but for count only
-        let countQuery = createBaseQuery().select('*', { count: 'exact', head: true });
+        // Count query - use the correct syntax for count
+        let countQuery = createBaseQuery().select('*', { count: 'exact' });
 
         // For filters, we need to get all available brands and stores from the filtered dataset
         // Create separate queries for brands and stores that match the search criteria
