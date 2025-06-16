@@ -6,14 +6,11 @@ export const createBaseQuery = (filters: ProductFilters) => {
   const { searchQuery, brandFilter, storeFilter, priceRange } = filters;
   let query = supabase.from('offer_search').select('*');
   
-  // Apply search filter - use more efficient search strategies
-  if (searchQuery) {
+  // Simplified search - only use exact matches to avoid timeouts
+  if (searchQuery && searchQuery.trim()) {
     const searchTerm = searchQuery.trim().toLowerCase();
-    if (searchTerm) {
-      // Try exact match first, then prefix match for better performance
-      // Avoid double wildcards which are very slow
-      query = query.or(`title.ilike.${searchTerm}*,title.ilike.*${searchTerm},brand_name.ilike.${searchTerm}*`);
-    }
+    // Use simple exact match first, then simple contains
+    query = query.or(`title.ilike.*${searchTerm}*,brand_name.ilike.*${searchTerm}*`);
   }
 
   // Apply filters
@@ -65,12 +62,10 @@ export const createCountQuery = (filters: ProductFilters) => {
   const { searchQuery, brandFilter, storeFilter, priceRange } = filters;
   let countQuery = supabase.from('offer_search').select('*', { count: 'exact', head: true });
   
-  // Apply the same optimized search filters
-  if (searchQuery) {
+  // Apply the same simplified search
+  if (searchQuery && searchQuery.trim()) {
     const searchTerm = searchQuery.trim().toLowerCase();
-    if (searchTerm) {
-      countQuery = countQuery.or(`title.ilike.${searchTerm}*,title.ilike.*${searchTerm},brand_name.ilike.${searchTerm}*`);
-    }
+    countQuery = countQuery.or(`title.ilike.*${searchTerm}*,brand_name.ilike.*${searchTerm}*`);
   }
 
   if (brandFilter && brandFilter.length > 0) {
@@ -92,12 +87,10 @@ export const createFiltersQuery = (filters: ProductFilters) => {
   const { searchQuery } = filters;
   let filtersQuery = supabase.from('offer_search').select('brand_name, store_name');
   
-  // Apply optimized search filter for filters query
-  if (searchQuery) {
+  // Apply simplified search for filters
+  if (searchQuery && searchQuery.trim()) {
     const searchTerm = searchQuery.trim().toLowerCase();
-    if (searchTerm) {
-      filtersQuery = filtersQuery.or(`title.ilike.${searchTerm}*,title.ilike.*${searchTerm},brand_name.ilike.${searchTerm}*`);
-    }
+    filtersQuery = filtersQuery.or(`title.ilike.*${searchTerm}*,brand_name.ilike.*${searchTerm}*`);
   }
 
   return filtersQuery;
