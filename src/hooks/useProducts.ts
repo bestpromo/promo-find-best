@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -91,10 +90,10 @@ export const useProducts = (
         // Apply sorting
         switch (sortBy) {
           case 'price-desc':
-            dataQuery = dataQuery.order('sale_price', { ascending: false, nullsLast: true });
+            dataQuery = dataQuery.order('sale_price', { ascending: false });
             break;
           case 'price-asc':
-            dataQuery = dataQuery.order('sale_price', { ascending: true, nullsLast: true });
+            dataQuery = dataQuery.order('sale_price', { ascending: true });
             break;
           case 'nome-desc':
             dataQuery = dataQuery.order('title', { ascending: false });

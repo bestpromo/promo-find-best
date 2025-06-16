@@ -4,19 +4,12 @@ import { ProductCard } from "@/components/ProductCard";
 import { SearchControls } from "@/components/SearchControls";
 import { FilterSidebar } from "@/components/FilterSidebar";
 import { MobileFilters } from "@/components/MobileFilters";
-import { 
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { NumberedPagination } from "@/components/NumberedPagination";
 import { useSearchParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useProducts } from "@/hooks/useProducts";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
 const PRODUCTS_PER_PAGE = 50;
 
@@ -28,6 +21,10 @@ const SearchPage = () => {
   const [brandFilter, setBrandFilter] = useState<string[]>([]);
   const [storeFilter, setStoreFilter] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 1000 });
+  
+  // For infinite scroll on mobile
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   
   const query = searchParams.get("q") || "";
   const { data, isLoading } = useProducts(
@@ -56,24 +53,54 @@ const SearchPage = () => {
   const activeFiltersCount = brandFilter.length + storeFilter.length +
     (priceRange.min > 0 || priceRange.max < 1000 ? 1 : 0);
 
+  // Update products for mobile infinite scroll
+  useEffect(() => {
+    if (isMobile) {
+      if (currentPage === 1) {
+        setAllProducts(products);
+      } else if (!isLoading) {
+        setAllProducts(prev => [...prev, ...products]);
+        setIsLoadingMore(false);
+      }
+    }
+  }, [products, isMobile, currentPage, isLoading]);
+
   // Reset filters and pagination when search query changes
   useEffect(() => {
     setBrandFilter([]);
     setStoreFilter([]);
     setPriceRange({ min: 0, max: 1000 });
     setCurrentPage(1);
+    setAllProducts([]);
   }, [query]);
 
   // Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
+    setAllProducts([]);
   }, [brandFilter, storeFilter, priceRange, sortBy]);
+
+  // Load more function for infinite scroll
+  const loadMore = () => {
+    if (!isLoadingMore && hasMore) {
+      setIsLoadingMore(true);
+      setCurrentPage(prev => prev + 1);
+    }
+  };
+
+  // Use infinite scroll hook for mobile
+  useInfiniteScroll({
+    hasMore: hasMore && isMobile,
+    onLoadMore: loadMore,
+    threshold: 200
+  });
 
   const handleClearFilters = () => {
     setBrandFilter([]);
     setStoreFilter([]);
     setPriceRange({ min: 0, max: 1000 });
     setCurrentPage(1);
+    setAllProducts([]);
   };
 
   const handleBrandFilterChange = (brands: string[]) => {
@@ -88,92 +115,13 @@ const SearchPage = () => {
     setPriceRange(range);
   };
 
-  // Generate pagination items
-  const generatePaginationItems = () => {
-    const items = [];
-    const maxVisiblePages = 5;
-    
-    if (totalPages <= maxVisiblePages) {
-      // Show all pages if total is small
-      for (let i = 1; i <= totalPages; i++) {
-        items.push(
-          <PaginationItem key={i}>
-            <PaginationLink
-              onClick={() => setCurrentPage(i)}
-              isActive={currentPage === i}
-              className="cursor-pointer"
-            >
-              {i}
-            </PaginationLink>
-          </PaginationItem>
-        );
-      }
-    } else {
-      // Show pages with ellipsis
-      items.push(
-        <PaginationItem key={1}>
-          <PaginationLink
-            onClick={() => setCurrentPage(1)}
-            isActive={currentPage === 1}
-            className="cursor-pointer"
-          >
-            1
-          </PaginationLink>
-        </PaginationItem>
-      );
-
-      if (currentPage > 3) {
-        items.push(
-          <PaginationItem key="ellipsis1">
-            <PaginationEllipsis />
-          </PaginationItem>
-        );
-      }
-
-      const start = Math.max(2, currentPage - 1);
-      const end = Math.min(totalPages - 1, currentPage + 1);
-
-      for (let i = start; i <= end; i++) {
-        if (i !== 1 && i !== totalPages) {
-          items.push(
-            <PaginationItem key={i}>
-              <PaginationLink
-                onClick={() => setCurrentPage(i)}
-                isActive={currentPage === i}
-                className="cursor-pointer"
-              >
-                {i}
-              </PaginationLink>
-            </PaginationItem>
-          );
-        }
-      }
-
-      if (currentPage < totalPages - 2) {
-        items.push(
-          <PaginationItem key="ellipsis2">
-            <PaginationEllipsis />
-          </PaginationItem>
-        );
-      }
-
-      if (totalPages > 1) {
-        items.push(
-          <PaginationItem key={totalPages}>
-            <PaginationLink
-              onClick={() => setCurrentPage(totalPages)}
-              isActive={currentPage === totalPages}
-              className="cursor-pointer"
-            >
-              {totalPages}
-            </PaginationLink>
-          </PaginationItem>
-        );
-      }
-    }
-
-    return items;
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // Determine which products to display
+  const displayProducts = isMobile ? allProducts : products;
 
   return (
     <div className="min-h-screen">
@@ -207,7 +155,7 @@ const SearchPage = () => {
             availableBrands={availableBrands}
             availableStores={availableStores}
             searchQuery={query}
-            allProducts={products}
+            allProducts={displayProducts}
             activeFiltersCount={activeFiltersCount}
             selectedBrands={brandFilter}
             selectedStores={storeFilter}
@@ -240,7 +188,7 @@ const SearchPage = () => {
               availableBrands={availableBrands}
               availableStores={availableStores}
               searchQuery={query}
-              allProducts={products}
+              allProducts={displayProducts}
               selectedBrands={brandFilter}
               selectedStores={storeFilter}
               priceRange={priceRange}
@@ -249,7 +197,7 @@ const SearchPage = () => {
 
           {/* Products Section */}
           <div className="flex-1">
-            {isLoading ? (
+            {isLoading && currentPage === 1 ? (
               <div className="text-center py-12">
                 <p className="text-gray-500">Carregando produtos...</p>
               </div>
@@ -258,7 +206,7 @@ const SearchPage = () => {
                 <div className="mb-4">
                   <p className="text-sm text-gray-600">
                     {totalCount} produtos encontrados
-                    {totalCount > 0 && ` • Mostrando ${startIndex}-${endIndex}`}
+                    {totalCount > 0 && !isMobile && ` • Mostrando ${startIndex}-${endIndex}`}
                     {brandFilter.length > 0 && ` • Marcas: ${brandFilter.join(', ')}`}
                     {storeFilter.length > 0 && ` • Lojas: ${storeFilter.join(', ')}`}
                     {(priceRange.min > 0 || priceRange.max < 1000) && 
@@ -273,7 +221,7 @@ const SearchPage = () => {
                     : 'flex flex-col gap-6'
                   }
                 `}>
-                  {products.map((product) => (
+                  {displayProducts.map((product) => (
                     <ProductCard 
                       key={product.id} 
                       product={product} 
@@ -282,34 +230,27 @@ const SearchPage = () => {
                   ))}
                 </div>
                 
-                {products.length === 0 && (
+                {displayProducts.length === 0 && (
                   <div className="text-center py-12">
                     <p className="text-gray-500">Nenhum produto encontrado para "{query}"</p>
                   </div>
                 )}
 
-                {/* Pagination */}
-                {totalPages > 1 && (
+                {/* Mobile infinite scroll loading indicator */}
+                {isMobile && isLoadingMore && (
+                  <div className="text-center py-4">
+                    <p className="text-gray-500">Carregando mais produtos...</p>
+                  </div>
+                )}
+
+                {/* Desktop Numbered Pagination */}
+                {!isMobile && totalPages > 1 && (
                   <div className="flex justify-center mt-8">
-                    <Pagination>
-                      <PaginationContent>
-                        <PaginationItem>
-                          <PaginationPrevious 
-                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                            className={`cursor-pointer ${currentPage === 1 ? 'pointer-events-none opacity-50' : ''}`}
-                          />
-                        </PaginationItem>
-                        
-                        {generatePaginationItems()}
-                        
-                        <PaginationItem>
-                          <PaginationNext 
-                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                            className={`cursor-pointer ${currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}`}
-                          />
-                        </PaginationItem>
-                      </PaginationContent>
-                    </Pagination>
+                    <NumberedPagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={handlePageChange}
+                    />
                   </div>
                 )}
               </>
