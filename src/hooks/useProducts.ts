@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -25,7 +24,8 @@ export type ProductView = {
 
 export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: string[], priceRange?: { min: number; max: number }) => {
   return useQuery({
-    queryKey: ["products", searchQuery, sortBy, brandFilter, priceRange],
+    // Remove brandFilter and priceRange from queryKey to prevent refetching on filter changes
+    queryKey: ["products", searchQuery],
     queryFn: async () => {
       try {
         let query = supabase
@@ -52,7 +52,7 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
 
         if (error) {
           console.error("Error fetching from offer_search:", error);
-          return { products: [], availableBrands: [] };
+          return { allProducts: [], availableBrands: [] };
         }
 
         console.log('Raw data count from offer_search:', data?.length || 0);
@@ -78,68 +78,65 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
           category: item.brand_name || 'Uncategorized'
         }));
 
-        // RULE 2: Extract ALL unique brands from the 1000 products for the sidebar
+        // Extract ALL unique brands from the products
         const availableBrands = [...new Set(allProducts.map(product => product.brand_name))]
           .filter(brand => brand && brand !== 'Unknown Store')
           .sort();
 
         console.log('All available brands:', availableBrands);
-        console.log('Total products before filtering:', allProducts.length);
+        console.log('Total products fetched:', allProducts.length);
 
-        // RULE 3: Apply client-side filtering (always start from ALL products)
-        let filteredProducts = allProducts;
-
-        // Apply brand filter if provided - RULE 3: Support multiple brand selection
-        if (brandFilter && brandFilter.length > 0) {
-          console.log('=== APPLYING BRAND FILTER ===');
-          console.log('Selected brands:', brandFilter);
-          console.log('Available brands in current search:', availableBrands);
-          
-          // Only filter by brands that actually exist in the current search results
-          const validSelectedBrands = brandFilter.filter(brand => availableBrands.includes(brand));
-          console.log('Valid selected brands (exist in current results):', validSelectedBrands);
-          
-          if (validSelectedBrands.length > 0) {
-            filteredProducts = allProducts.filter(product => {
-              const isIncluded = validSelectedBrands.includes(product.brand_name);
-              return isIncluded;
-            });
-            
-            console.log(`Filtered from ${allProducts.length} to ${filteredProducts.length} products`);
-            
-            // Show count by brand for verification
-            const brandCounts = filteredProducts.reduce((acc, p) => {
-              acc[p.brand_name] = (acc[p.brand_name] || 0) + 1;
-              return acc;
-            }, {} as Record<string, number>);
-            console.log('Products by selected brands:', brandCounts);
-          } else {
-            console.log('No valid brands selected - all selected brands are from previous searches');
-            // If no valid brands are selected, show all products
-            filteredProducts = allProducts;
-          }
-        }
-
-        // Apply price range filter if provided
-        if (priceRange && (priceRange.min > 0 || priceRange.max < 1000)) {
-          const beforePriceFilter = filteredProducts.length;
-          filteredProducts = filteredProducts.filter(product => {
-            const price = product.sale_price || 0;
-            return price >= priceRange.min && price <= priceRange.max;
-          });
-          console.log(`Price filter: ${beforePriceFilter} -> ${filteredProducts.length} products`);
-        }
-
-        console.log('=== FINAL RESULTS ===');
-        console.log('Available brands for sidebar:', availableBrands.length);
-        console.log('Final filtered products:', filteredProducts.length);
-
-        return { products: filteredProducts, availableBrands };
+        // Return raw data, filtering will be done in the component
+        return { allProducts, availableBrands };
 
       } catch (fallbackError) {
         console.error("Error in products query:", fallbackError);
-        return { products: [], availableBrands: [] };
+        return { allProducts: [], availableBrands: [] };
       }
-    }
+    },
+    // Keep data fresh for 5 minutes to avoid unnecessary refetches
+    staleTime: 5 * 60 * 1000,
   });
+};
+
+// Helper function to apply filters client-side
+export const applyFilters = (
+  allProducts: ProductView[], 
+  brandFilter?: string[], 
+  priceRange?: { min: number; max: number }
+) => {
+  let filteredProducts = allProducts;
+
+  // Apply brand filter
+  if (brandFilter && brandFilter.length > 0) {
+    console.log('=== APPLYING BRAND FILTER ===');
+    console.log('Selected brands:', brandFilter);
+    
+    filteredProducts = allProducts.filter(product => {
+      const isIncluded = brandFilter.includes(product.brand_name);
+      console.log(`Product: ${product.title}, Brand: ${product.brand_name}, Included: ${isIncluded}`);
+      return isIncluded;
+    });
+    
+    console.log(`Filtered from ${allProducts.length} to ${filteredProducts.length} products`);
+    
+    // Show count by brand for verification
+    const brandCounts = filteredProducts.reduce((acc, p) => {
+      acc[p.brand_name] = (acc[p.brand_name] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    console.log('Products by selected brands:', brandCounts);
+  }
+
+  // Apply price range filter
+  if (priceRange && (priceRange.min > 0 || priceRange.max < 1000)) {
+    const beforePriceFilter = filteredProducts.length;
+    filteredProducts = filteredProducts.filter(product => {
+      const price = product.sale_price || 0;
+      return price >= priceRange.min && price <= priceRange.max;
+    });
+    console.log(`Price filter: ${beforePriceFilter} -> ${filteredProducts.length} products`);
+  }
+
+  return filteredProducts;
 };

@@ -5,7 +5,7 @@ import { FilterSidebar } from "@/components/FilterSidebar";
 import { useSearchParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { useProducts, ProductView } from "@/hooks/useProducts";
+import { useProducts, ProductView, applyFilters } from "@/hooks/useProducts";
 
 const PRODUCTS_PER_PAGE = 50;
 
@@ -18,10 +18,13 @@ const SearchPage = () => {
   const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 1000 });
   
   const query = searchParams.get("q") || "";
-  const { data, isLoading } = useProducts(query, sortBy, brandFilter, priceRange);
+  const { data, isLoading } = useProducts(query, sortBy);
   
-  const products = data?.products || [];
+  const allProducts = data?.allProducts || [];
   const availableBrands = data?.availableBrands || [];
+
+  // Apply filters client-side
+  const filteredProducts = applyFilters(allProducts, brandFilter, priceRange);
 
   // Reset filters when search query changes (for brand navigation)
   useEffect(() => {
@@ -31,7 +34,7 @@ const SearchPage = () => {
   }, [query]);
 
   // Sort products based on selected sorting option
-  const sortedProducts = [...products].sort((a, b) => {
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
     const productA = a as ProductView;
     const productB = b as ProductView;
     
