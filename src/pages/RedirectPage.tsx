@@ -50,19 +50,16 @@ const RedirectPage = () => {
           clicked_at: new Date().toISOString(),
           user_ip: '', // Pode ser preenchido no backend se necessário
           user_agent: navigator.userAgent,
-          referrer_url: window.location.origin,
-          deep_link_url: deepLinkUrl
+          referrer_url: window.location.origin
         });
 
       if (error) {
         console.error('Erro ao registrar clique:', error);
       }
 
-      // Redirecionar para a URL da loja parceira
-      window.open(deepLinkUrl, '_blank', 'noopener,noreferrer');
+      // Redirecionar para a URL da loja parceira na mesma página
+      window.location.href = deepLinkUrl;
       
-      // Voltar para a página anterior
-      navigate(-1);
     } catch (error) {
       console.error('Erro durante redirecionamento:', error);
       navigate("/");
