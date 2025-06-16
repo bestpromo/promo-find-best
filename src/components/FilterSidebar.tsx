@@ -11,16 +11,12 @@ interface FilterSidebarProps {
   onBrandChange: (brand: string) => void;
   onPriceRangeChange: (range: { min: number; max: number }) => void;
   onClearFilters: () => void;
+  availableBrands: string[];
 }
 
-export const FilterSidebar = ({ onBrandChange, onPriceRangeChange, onClearFilters }: FilterSidebarProps) => {
+export const FilterSidebar = ({ onBrandChange, onPriceRangeChange, onClearFilters, availableBrands }: FilterSidebarProps) => {
   const [selectedBrand, setSelectedBrand] = useState("");
   const [priceRange, setPriceRange] = useState([0, 1000]);
-
-  const popularBrands = [
-    "Nike", "Adidas", "Samsung", "Apple", "Sony", 
-    "LG", "Brastemp", "Electrolux", "Puma", "Under Armour"
-  ];
 
   const handleBrandSelect = (brand: string) => {
     const newBrand = selectedBrand === brand ? "" : brand;
@@ -57,19 +53,23 @@ export const FilterSidebar = ({ onBrandChange, onPriceRangeChange, onClearFilter
           {/* Brand Filter */}
           <div>
             <Label className="text-sm font-medium mb-3 block">Marca</Label>
-            <div className="space-y-2">
-              {popularBrands.map((brand) => (
-                <div key={brand} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={brand}
-                    checked={selectedBrand === brand}
-                    onCheckedChange={() => handleBrandSelect(brand)}
-                  />
-                  <Label htmlFor={brand} className="text-sm cursor-pointer">
-                    {brand}
-                  </Label>
-                </div>
-              ))}
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {availableBrands.length > 0 ? (
+                availableBrands.map((brand) => (
+                  <div key={brand} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={brand}
+                      checked={selectedBrand === brand}
+                      onCheckedChange={() => handleBrandSelect(brand)}
+                    />
+                    <Label htmlFor={brand} className="text-sm cursor-pointer">
+                      {brand}
+                    </Label>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500">Nenhuma marca encontrada</p>
+              )}
             </div>
           </div>
 

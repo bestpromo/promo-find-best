@@ -59,7 +59,7 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
 
         if (error) {
           console.error("Error fetching from offer_search:", error);
-          return [];
+          return { products: [], availableBrands: [] };
         }
 
         // Transform the data to match our ProductView interface
@@ -83,11 +83,16 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
           category: item.merchant_name || item.store_name || 'Uncategorized'
         }));
 
-        return transformedData;
+        // Extract unique brands from the results
+        const availableBrands = [...new Set(transformedData.map(product => product.brand_name))]
+          .filter(brand => brand && brand !== 'Unknown Store')
+          .sort();
+
+        return { products: transformedData, availableBrands };
 
       } catch (fallbackError) {
         console.error("Error in products query:", fallbackError);
-        return [];
+        return { products: [], availableBrands: [] };
       }
     }
   });

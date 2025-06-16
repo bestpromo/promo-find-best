@@ -19,7 +19,10 @@ const SearchPage = () => {
   const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 1000 });
   
   const query = searchParams.get("q") || "";
-  const { data: products = [], isLoading } = useProducts(query, sortBy, brandFilter, priceRange);
+  const { data, isLoading } = useProducts(query, sortBy, brandFilter, priceRange);
+  
+  const products = data?.products || [];
+  const availableBrands = data?.availableBrands || [];
 
   // Sort products based on selected sorting option
   const sortedProducts = [...products].sort((a, b) => {
@@ -84,6 +87,7 @@ const SearchPage = () => {
             onBrandChange={setBrandFilter}
             onPriceRangeChange={setPriceRange}
             onClearFilters={handleClearFilters}
+            availableBrands={availableBrands}
           />
 
           {/* Products Section */}
