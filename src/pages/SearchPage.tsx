@@ -10,7 +10,7 @@ import { useProducts } from "@/hooks/useProducts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
-const PRODUCTS_PER_PAGE = 50;
+const PRODUCTS_PER_PAGE = 48;
 
 const SearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
