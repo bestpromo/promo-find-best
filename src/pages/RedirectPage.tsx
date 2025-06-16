@@ -57,7 +57,7 @@ const RedirectPage = () => {
         console.error('Erro ao registrar clique:', error);
       }
 
-      // Redirecionar para a URL da loja parceira na mesma página
+      // Redirecionar para a URL da loja parceira na mesma aba
       window.location.href = deepLinkUrl;
       
     } catch (error) {

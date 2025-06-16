@@ -29,7 +29,7 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
     const isSupabaseProduct = 'offer_id' in product;
     
     if (isSupabaseProduct) {
-      // Redirecionar para a página intermediária com os parâmetros necessários
+      // Abrir a página de redirecionamento em uma nova aba
       const params = new URLSearchParams({
         offer_id: product.offer_id,
         deep_link_url: product.deep_link_url || '',
@@ -38,7 +38,8 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
         price: (product.sale_price || product.promotional_price || 0).toString()
       });
       
-      navigate(`/redirecting?${params.toString()}`);
+      const redirectUrl = `/redirecting?${params.toString()}`;
+      window.open(redirectUrl, '_blank', 'noopener,noreferrer');
     } else {
       // Para produtos mock, manter comportamento original
       const url = product.url;
