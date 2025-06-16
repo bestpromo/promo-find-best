@@ -90,17 +90,39 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
 
         // Apply brand filter if provided
         if (brandFilter && brandFilter.length > 0) {
-          console.log('Applying brand filter:', brandFilter);
-          console.log('Products before brand filter:', filteredProducts.map(p => ({ title: p.title, brand: p.brand_name })));
+          console.log('=== BRAND FILTER DEBUG ===');
+          console.log('brandFilter array:', brandFilter);
+          console.log('brandFilter type:', typeof brandFilter);
+          console.log('brandFilter length:', brandFilter.length);
+          console.log('brandFilter JSON:', JSON.stringify(brandFilter));
+          
+          // Get unique brands from current products
+          const currentBrands = [...new Set(transformedData.map(p => p.brand_name))];
+          console.log('Available brands in current products:', currentBrands);
           
           filteredProducts = filteredProducts.filter(product => {
-            const matches = brandFilter.includes(product.brand_name);
-            console.log(`Product "${product.title}" with brand "${product.brand_name}" matches filter:`, matches);
-            return matches;
+            const productBrand = product.brand_name;
+            const isIncluded = brandFilter.includes(productBrand);
+            
+            // Only log a few examples to avoid spam
+            if (Math.random() < 0.1) { // Log 10% of products
+              console.log(`Checking product "${product.title}"`);
+              console.log(`  Product brand: "${productBrand}"`);
+              console.log(`  Brand filter contains this brand:`, isIncluded);
+              console.log(`  Filter array:`, brandFilter);
+            }
+            
+            return isIncluded;
           });
           
-          console.log('After brand filter:', filteredProducts.length);
-          console.log('Filtered products:', filteredProducts.map(p => ({ title: p.title, brand: p.brand_name })));
+          console.log('Products after brand filtering:', filteredProducts.length);
+          console.log('Filtered products by brand:', 
+            filteredProducts.reduce((acc, p) => {
+              acc[p.brand_name] = (acc[p.brand_name] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>)
+          );
+          console.log('=== END BRAND FILTER DEBUG ===');
         }
 
         // Apply price range filter if provided
