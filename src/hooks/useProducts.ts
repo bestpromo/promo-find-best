@@ -46,7 +46,7 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
           }
         }
 
-        console.log('Executing query with filters:', { searchQuery, brandFilter, priceRange });
+        console.log('Executing query with search:', searchQuery);
 
         const { data, error } = await query;
 
@@ -55,10 +55,10 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
           return { products: [], availableBrands: [] };
         }
 
-        console.log('Raw data from offer_search:', data);
+        console.log('Raw data count from offer_search:', data?.length || 0);
 
         // Transform the data to match our ProductView interface
-        const transformedData: ProductView[] = (data || []).map((item: any) => ({
+        const allProducts: ProductView[] = (data || []).map((item: any) => ({
           offer_id: item.offer_id || Math.random().toString(),
           title: item.title || 'Unnamed Product',
           url_slug: item.url_slug || '',
@@ -78,63 +78,49 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
           category: item.brand_name || 'Uncategorized'
         }));
 
-        console.log('Transformed data:', transformedData);
-
-        // Extract unique brands from ALL search results for dynamic filtering (before any client-side filtering)
-        const availableBrands = [...new Set(transformedData.map(product => product.brand_name))]
+        // RULE 2: Extract ALL unique brands from the 1000 products for the sidebar
+        const availableBrands = [...new Set(allProducts.map(product => product.brand_name))]
           .filter(brand => brand && brand !== 'Unknown Store')
           .sort();
 
-        // Apply client-side filtering 
-        let filteredProducts = transformedData;
+        console.log('All available brands:', availableBrands);
+        console.log('Total products before filtering:', allProducts.length);
 
-        // Apply brand filter if provided
+        // RULE 3: Apply client-side filtering (always start from ALL products)
+        let filteredProducts = allProducts;
+
+        // Apply brand filter if provided - RULE 3: Support multiple brand selection
         if (brandFilter && brandFilter.length > 0) {
-          console.log('=== BRAND FILTER DEBUG ===');
-          console.log('brandFilter array:', brandFilter);
-          console.log('brandFilter type:', typeof brandFilter);
-          console.log('brandFilter length:', brandFilter.length);
-          console.log('brandFilter JSON:', JSON.stringify(brandFilter));
+          console.log('=== APPLYING BRAND FILTER ===');
+          console.log('Selected brands:', brandFilter);
           
-          // Get unique brands from current products
-          const currentBrands = [...new Set(transformedData.map(p => p.brand_name))];
-          console.log('Available brands in current products:', currentBrands);
-          
-          filteredProducts = filteredProducts.filter(product => {
-            const productBrand = product.brand_name;
-            const isIncluded = brandFilter.includes(productBrand);
-            
-            // Only log a few examples to avoid spam
-            if (Math.random() < 0.1) { // Log 10% of products
-              console.log(`Checking product "${product.title}"`);
-              console.log(`  Product brand: "${productBrand}"`);
-              console.log(`  Brand filter contains this brand:`, isIncluded);
-              console.log(`  Filter array:`, brandFilter);
-            }
-            
+          filteredProducts = allProducts.filter(product => {
+            const isIncluded = brandFilter.includes(product.brand_name);
             return isIncluded;
           });
           
-          console.log('Products after brand filtering:', filteredProducts.length);
-          console.log('Filtered products by brand:', 
-            filteredProducts.reduce((acc, p) => {
-              acc[p.brand_name] = (acc[p.brand_name] || 0) + 1;
-              return acc;
-            }, {} as Record<string, number>)
-          );
-          console.log('=== END BRAND FILTER DEBUG ===');
+          console.log(`Filtered from ${allProducts.length} to ${filteredProducts.length} products`);
+          
+          // Show count by brand for verification
+          const brandCounts = filteredProducts.reduce((acc, p) => {
+            acc[p.brand_name] = (acc[p.brand_name] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>);
+          console.log('Products by selected brands:', brandCounts);
         }
 
         // Apply price range filter if provided
         if (priceRange && (priceRange.min > 0 || priceRange.max < 1000)) {
+          const beforePriceFilter = filteredProducts.length;
           filteredProducts = filteredProducts.filter(product => {
             const price = product.sale_price || 0;
             return price >= priceRange.min && price <= priceRange.max;
           });
-          console.log('After price filter:', filteredProducts.length);
+          console.log(`Price filter: ${beforePriceFilter} -> ${filteredProducts.length} products`);
         }
 
-        console.log('Available brands:', availableBrands);
+        console.log('=== FINAL RESULTS ===');
+        console.log('Available brands for sidebar:', availableBrands.length);
         console.log('Final filtered products:', filteredProducts.length);
 
         return { products: filteredProducts, availableBrands };

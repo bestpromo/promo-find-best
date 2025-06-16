@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -18,25 +17,32 @@ interface FilterSidebarProps {
 export const FilterSidebar = ({ onBrandChange, onPriceRangeChange, onClearFilters, availableBrands }: FilterSidebarProps) => {
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState([0, 1000]);
-  const [originalBrandOrder, setOriginalBrandOrder] = useState<string[]>([]);
 
-  // Store original order when brands are first loaded
-  useEffect(() => {
-    if (availableBrands.length > 0 && originalBrandOrder.length === 0) {
-      setOriginalBrandOrder([...availableBrands]);
-    }
-  }, [availableBrands, originalBrandOrder]);
-
-  // Create ordered brand list with selected brands at the top
+  // RULE 4: Create ordered brand list with selected brands at the top
   const getOrderedBrands = () => {
-    const unselectedBrands = availableBrands.filter(brand => !selectedBrands.includes(brand));
+    if (selectedBrands.length === 0) {
+      // No brands selected, show all brands in alphabetical order
+      return availableBrands;
+    }
+    
+    // Show selected brands first (in selection order), then unselected brands alphabetically
+    const unselectedBrands = availableBrands
+      .filter(brand => !selectedBrands.includes(brand))
+      .sort();
+    
     return [...selectedBrands, ...unselectedBrands];
   };
 
   const handleBrandToggle = (brand: string) => {
+    console.log('=== BRAND TOGGLE ===');
+    console.log('Toggling brand:', brand);
+    console.log('Current selected brands:', selectedBrands);
+    
     const newSelectedBrands = selectedBrands.includes(brand)
       ? selectedBrands.filter(b => b !== brand)
       : [...selectedBrands, brand];
+    
+    console.log('New selected brands:', newSelectedBrands);
     
     setSelectedBrands(newSelectedBrands);
     onBrandChange(newSelectedBrands);
@@ -48,6 +54,7 @@ export const FilterSidebar = ({ onBrandChange, onPriceRangeChange, onClearFilter
   };
 
   const handleClearFilters = () => {
+    console.log('Clearing all filters');
     setSelectedBrands([]);
     setPriceRange([0, 1000]);
     onClearFilters();
