@@ -53,30 +53,48 @@ export const FilterSidebar = ({
 
   // Reset filters when search query changes
   useEffect(() => {
-    console.log('FilterSidebar: Search query changed, resetting filters');
-    setLocalSelectedBrands([]);
-    setLocalSelectedStores([]);
-    setLocalPriceRange([0, 1000]);
+    if (searchQuery !== undefined) {
+      console.log('FilterSidebar: Search query changed, resetting filters');
+      setLocalSelectedBrands([]);
+      setLocalSelectedStores([]);
+      setLocalPriceRange([0, 1000]);
+    }
   }, [searchQuery]);
 
-  // Calculate product count for each brand
+  // Calculate product count for each brand considering current store filters
   const getBrandProductCount = (brand: string) => {
-    return allProducts.filter(product => product.brand_name === brand).length;
-  };
-
-  // Calculate product count for each store
-  const getStoreProductCount = (store: string) => {
-    return allProducts.filter(product => product.store_name === store).length;
-  };
-
-  // RULE 4: Create ordered brand list with selected brands at the top
-  const getOrderedBrands = () => {
-    if (localSelectedBrands.length === 0) {
-      // No brands selected, show all brands in alphabetical order
-      return availableBrands;
+    let filteredProducts = allProducts.filter(product => product.brand_name === brand);
+    
+    // If stores are selected, also filter by stores
+    if (localSelectedStores.length > 0) {
+      filteredProducts = filteredProducts.filter(product => 
+        localSelectedStores.includes(product.store_name)
+      );
     }
     
-    // Show selected brands first (in selection order), then unselected brands alphabetically
+    return filteredProducts.length;
+  };
+
+  // Calculate product count for each store considering current brand filters
+  const getStoreProductCount = (store: string) => {
+    let filteredProducts = allProducts.filter(product => product.store_name === store);
+    
+    // If brands are selected, also filter by brands
+    if (localSelectedBrands.length > 0) {
+      filteredProducts = filteredProducts.filter(product => 
+        localSelectedBrands.includes(product.brand_name)
+      );
+    }
+    
+    return filteredProducts.length;
+  };
+
+  // Create ordered brand list with selected brands at the top
+  const getOrderedBrands = () => {
+    if (localSelectedBrands.length === 0) {
+      return availableBrands.sort();
+    }
+    
     const unselectedBrands = availableBrands
       .filter(brand => !localSelectedBrands.includes(brand))
       .sort();
@@ -84,14 +102,12 @@ export const FilterSidebar = ({
     return [...localSelectedBrands, ...unselectedBrands];
   };
 
-  // RULE 4: Create ordered store list with selected stores at the top
+  // Create ordered store list with selected stores at the top
   const getOrderedStores = () => {
     if (localSelectedStores.length === 0) {
-      // No stores selected, show all stores in alphabetical order
-      return availableStores;
+      return availableStores.sort();
     }
     
-    // Show selected stores first (in selection order), then unselected stores alphabetically
     const unselectedStores = availableStores
       .filter(store => !localSelectedStores.includes(store))
       .sort();
@@ -179,13 +195,13 @@ export const FilterSidebar = ({
                         }`}
                       >
                         <Checkbox
-                          id={brand}
+                          id={`brand-${brand}`}
                           checked={isSelected}
                           onCheckedChange={() => handleBrandToggle(brand)}
                         />
                         <div className="flex items-center justify-between w-full">
                           <Label 
-                            htmlFor={brand} 
+                            htmlFor={`brand-${brand}`} 
                             className={`text-sm cursor-pointer ${
                               isSelected ? 'font-medium text-blue-700' : ''
                             }`}
@@ -232,13 +248,13 @@ export const FilterSidebar = ({
                         }`}
                       >
                         <Checkbox
-                          id={store}
+                          id={`store-${store}`}
                           checked={isSelected}
                           onCheckedChange={() => handleStoreToggle(store)}
                         />
                         <div className="flex items-center justify-between w-full">
                           <Label 
-                            htmlFor={store} 
+                            htmlFor={`store-${store}`} 
                             className={`text-sm cursor-pointer ${
                               isSelected ? 'font-medium text-green-700' : ''
                             }`}
