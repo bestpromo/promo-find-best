@@ -1,11 +1,14 @@
+
 import { SearchBar } from "@/components/SearchBar";
 import { ProductCard } from "@/components/ProductCard";
 import { SearchControls } from "@/components/SearchControls";
 import { FilterSidebar } from "@/components/FilterSidebar";
+import { MobileFilters } from "@/components/MobileFilters";
 import { useSearchParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useProducts, ProductView, applyFilters } from "@/hooks/useProducts";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const PRODUCTS_PER_PAGE = 50;
 
@@ -19,12 +22,17 @@ const SearchPage = () => {
   
   const query = searchParams.get("q") || "";
   const { data, isLoading } = useProducts(query, sortBy);
+  const isMobile = useIsMobile();
   
   const allProducts = data?.allProducts || [];
   const availableBrands = data?.availableBrands || [];
 
   // Apply filters client-side
   const filteredProducts = applyFilters(allProducts, brandFilter, priceRange);
+
+  // Calculate active filters count for mobile
+  const activeFiltersCount = brandFilter.length + 
+    (priceRange.min > 0 || priceRange.max < 1000 ? 1 : 0);
 
   // Reset filters when search query changes
   useEffect(() => {
@@ -112,25 +120,46 @@ const SearchPage = () => {
         </div>
       </header>
       
-      <div className="container mx-auto px-4 py-4 border-b">
-        <SearchControls 
+      {/* Mobile Filters - Only show on small screens */}
+      {isMobile && (
+        <MobileFilters
+          onBrandChange={handleBrandFilterChange}
+          onPriceRangeChange={handlePriceRangeChange}
+          onClearFilters={handleClearFilters}
           onSortChange={setSortBy}
           onDisplayModeChange={setDisplayMode}
           displayMode={displayMode}
+          availableBrands={availableBrands}
+          searchQuery={query}
+          allProducts={allProducts}
+          activeFiltersCount={activeFiltersCount}
         />
-      </div>
+      )}
+
+      {/* Desktop Controls - Only show on larger screens */}
+      {!isMobile && (
+        <div className="container mx-auto px-4 py-4 border-b">
+          <SearchControls 
+            onSortChange={setSortBy}
+            onDisplayModeChange={setDisplayMode}
+            displayMode={displayMode}
+          />
+        </div>
+      )}
 
       <main className="container mx-auto px-4 py-8">
         <div className="flex gap-6">
-          {/* Filter Sidebar */}
-          <FilterSidebar
-            onBrandChange={handleBrandFilterChange}
-            onPriceRangeChange={handlePriceRangeChange}
-            onClearFilters={handleClearFilters}
-            availableBrands={availableBrands}
-            searchQuery={query}
-            allProducts={allProducts}
-          />
+          {/* Desktop Filter Sidebar - Only show on larger screens */}
+          {!isMobile && (
+            <FilterSidebar
+              onBrandChange={handleBrandFilterChange}
+              onPriceRangeChange={handlePriceRangeChange}
+              onClearFilters={handleClearFilters}
+              availableBrands={availableBrands}
+              searchQuery={query}
+              allProducts={allProducts}
+            />
+          )}
 
           {/* Products Section */}
           <div className="flex-1">
