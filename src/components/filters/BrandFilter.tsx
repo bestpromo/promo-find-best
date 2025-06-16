@@ -1,6 +1,7 @@
 
 import { FilterSection } from "./FilterSection";
 import { FilterItem } from "./FilterItem";
+import { FilterSkeleton } from "@/components/ui/skeleton";
 
 interface BrandFilterProps {
   availableBrands: string[];
@@ -8,6 +9,7 @@ interface BrandFilterProps {
   allProducts: any[];
   selectedStores: string[];
   onBrandToggle: (brand: string) => void;
+  isLoading?: boolean;
 }
 
 export const BrandFilter = ({
@@ -15,7 +17,8 @@ export const BrandFilter = ({
   selectedBrands,
   allProducts,
   selectedStores,
-  onBrandToggle
+  onBrandToggle,
+  isLoading = false
 }: BrandFilterProps) => {
   // Filter brands based on selected stores
   const getFilteredBrands = () => {
@@ -72,6 +75,14 @@ export const BrandFilter = ({
 
   const orderedBrands = getOrderedBrands();
   const validSelectedBrands = selectedBrands.filter(brand => filteredBrands.includes(brand));
+
+  if (isLoading) {
+    return (
+      <FilterSection title="Marcas" showCount={false}>
+        <FilterSkeleton />
+      </FilterSection>
+    );
+  }
 
   return (
     <FilterSection 

@@ -18,6 +18,7 @@ interface FilterSidebarProps {
   selectedBrands?: string[];
   selectedStores?: string[];
   priceRange?: { min: number; max: number };
+  isLoading?: boolean;
 }
 
 export const FilterSidebar = ({ 
@@ -31,7 +32,8 @@ export const FilterSidebar = ({
   allProducts = [],
   selectedBrands = [],
   selectedStores = [],
-  priceRange = { min: 0, max: 1000 }
+  priceRange = { min: 0, max: 1000 },
+  isLoading = false
 }: FilterSidebarProps) => {
   const [localSelectedBrands, setLocalSelectedBrands] = useState<string[]>(selectedBrands);
   const [localSelectedStores, setLocalSelectedStores] = useState<string[]>(selectedStores);
@@ -123,6 +125,7 @@ export const FilterSidebar = ({
             size="sm" 
             onClick={handleClearFilters}
             className="w-full"
+            disabled={isLoading}
           >
             Limpar Filtros
           </Button>
@@ -134,6 +137,7 @@ export const FilterSidebar = ({
             selectedStores={localSelectedStores}
             allProducts={allProducts}
             onStoreToggle={handleStoreToggle}
+            isLoading={isLoading}
           />
 
           {/* 2. Brand Filter - Second, considers store selection */}
@@ -143,6 +147,7 @@ export const FilterSidebar = ({
             allProducts={allProducts}
             selectedStores={localSelectedStores}
             onBrandToggle={handleBrandToggle}
+            isLoading={isLoading}
           />
 
           {/* 3. Price Range Filter - Third, considers store and brand selection */}

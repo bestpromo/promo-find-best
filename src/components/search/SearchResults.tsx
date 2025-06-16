@@ -1,6 +1,7 @@
 
 import { ProductCard } from "@/components/ProductCard";
 import { NumberedPagination } from "@/components/NumberedPagination";
+import { ProductSkeleton } from "@/components/ui/skeleton";
 
 interface SearchResultsProps {
   displayProducts: any[];
@@ -39,10 +40,25 @@ export const SearchResults = ({
   hasMore,
   onPageChange
 }: SearchResultsProps) => {
-  if (isLoading && currentPage === 1) {
+  const showSkeleton = isLoading && (currentPage === 1 || displayProducts.length === 0);
+
+  if (showSkeleton) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">Carregando produtos...</p>
+      <div className="space-y-6">
+        <div className="mb-4">
+          <div className="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+        
+        <div className={`
+          ${displayMode === 'grid' 
+            ? 'grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6' 
+            : 'flex flex-col gap-6'
+          }
+        `}>
+          {Array.from({ length: isMobile ? 8 : 12 }).map((_, i) => (
+            <ProductSkeleton key={i} displayMode={displayMode} />
+          ))}
+        </div>
       </div>
     );
   }
@@ -82,7 +98,7 @@ export const SearchResults = ({
         ))}
       </div>
       
-      {displayProducts.length === 0 && totalCount === 0 && (
+      {displayProducts.length === 0 && totalCount === 0 && !isLoading && (
         <div className="text-center py-12">
           <p className="text-gray-500">Nenhum produto encontrado para "{query}"</p>
         </div>
@@ -91,7 +107,10 @@ export const SearchResults = ({
       {/* Mobile infinite scroll loading indicator */}
       {isMobile && isLoadingMore && (
         <div className="text-center py-4">
-          <p className="text-gray-500">Carregando mais produtos...</p>
+          <div className="flex justify-center items-center space-x-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+            <p className="text-gray-500">Carregando mais produtos...</p>
+          </div>
         </div>
       )}
 

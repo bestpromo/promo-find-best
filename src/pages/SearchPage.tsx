@@ -119,7 +119,8 @@ const SearchPage = () => {
     currentPage, 
     isMobile,
     displayProductsLength: displayProducts.length,
-    shouldShowPagination: !isMobile && totalPages > 1
+    shouldShowPagination: !isMobile && totalPages > 1,
+    isLoading
   });
 
   return (
@@ -137,6 +138,7 @@ const SearchPage = () => {
         selectedBrands={brandFilter}
         selectedStores={storeFilter}
         priceRange={priceRange}
+        isLoading={isLoading}
         onSortChange={setSortBy}
         onDisplayModeChange={setDisplayMode}
         onBrandFilterChange={handleBrandFilterChange}

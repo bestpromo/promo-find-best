@@ -1,19 +1,22 @@
 
 import { FilterSection } from "./FilterSection";
 import { FilterItem } from "./FilterItem";
+import { FilterSkeleton } from "@/components/ui/skeleton";
 
 interface StoreFilterProps {
   availableStores: string[];
   selectedStores: string[];
   allProducts: any[];
   onStoreToggle: (store: string) => void;
+  isLoading?: boolean;
 }
 
 export const StoreFilter = ({
   availableStores,
   selectedStores,
   allProducts,
-  onStoreToggle
+  onStoreToggle,
+  isLoading = false
 }: StoreFilterProps) => {
   // Calculate product count for each store from available data
   // Note: allProducts here represents the current search results, not filtered results
@@ -39,6 +42,14 @@ export const StoreFilter = ({
   };
 
   const orderedStores = getOrderedStores();
+
+  if (isLoading) {
+    return (
+      <FilterSection title="Parceiros" showCount={false} className="h-48">
+        <FilterSkeleton />
+      </FilterSection>
+    );
+  }
 
   return (
     <FilterSection 

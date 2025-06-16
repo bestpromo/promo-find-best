@@ -15,6 +15,7 @@ interface SearchPageLayoutProps {
   selectedBrands: string[];
   selectedStores: string[];
   priceRange: { min: number; max: number };
+  isLoading: boolean;
   onSortChange: (value: string) => void;
   onDisplayModeChange: (mode: 'grid' | 'list') => void;
   onBrandFilterChange: (brands: string[]) => void;
@@ -35,6 +36,7 @@ export const SearchPageLayout = ({
   selectedBrands,
   selectedStores,
   priceRange,
+  isLoading,
   onSortChange,
   onDisplayModeChange,
   onBrandFilterChange,
@@ -96,6 +98,7 @@ export const SearchPageLayout = ({
               selectedBrands={selectedBrands}
               selectedStores={selectedStores}
               priceRange={priceRange}
+              isLoading={isLoading}
             />
           )}
 
