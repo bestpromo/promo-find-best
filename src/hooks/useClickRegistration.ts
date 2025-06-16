@@ -9,6 +9,20 @@ export const useClickRegistration = () => {
   const [registrationStatus, setRegistrationStatus] = useState<RegistrationStatus>('pending');
   const registeredOffers = useRef<Set<string>>(new Set());
 
+  // Função para obter o IP do usuário
+  const getUserIP = async (): Promise<string | null> => {
+    try {
+      console.log('Obtendo IP do usuário...');
+      const response = await fetch('https://api.ipify.org?format=json');
+      const data = await response.json();
+      console.log('IP obtido:', data.ip);
+      return data.ip;
+    } catch (error) {
+      console.warn('Não foi possível obter o IP:', error);
+      return null;
+    }
+  };
+
   const registerClick = async (offerId: string) => {
     console.log('=== REGISTERCLICK INICIADO ===');
     console.log('offer_id recebido:', offerId);
@@ -43,31 +57,34 @@ export const useClickRegistration = () => {
         return;
       }
 
-      // Primeiro, vamos verificar o schema da tabela
-      console.log('=== VERIFICANDO SCHEMA DA TABELA ===');
-      const { data: schemaData, error: schemaError } = await supabase
-        .from('catalog_offer_click')
-        .select('*')
-        .limit(1);
-      
-      console.log('Schema check - data:', schemaData);
-      console.log('Schema check - error:', schemaError);
-
       // Marcar como registrado antes da inserção para evitar duplicatas
       registeredOffers.current.add(offerId);
       console.log('Offer_id marcado como registrado');
 
-      // Preparar dados com estrutura mais simples
+      // Obter informações do usuário
+      console.log('=== COLETANDO INFORMAÇÕES DO USUÁRIO ===');
+      const userIP = await getUserIP();
+      const userAgent = navigator.userAgent;
+      const referrer = document.referrer || window.location.origin;
+      
+      console.log('IP do usuário:', userIP);
+      console.log('User Agent:', userAgent);
+      console.log('Referrer:', referrer);
+
+      // Preparar dados completos para inserção
       const clickData = {
-        offer_id: offerId.toString().trim()
+        offer_id: offerId.toString().trim(),
+        ip_address: userIP,
+        user_agent: userAgent,
+        referrer: referrer
       };
       
       console.log('=== DADOS PARA INSERÇÃO ===');
-      console.log('Dados simplificados:', clickData);
+      console.log('Dados completos:', clickData);
       console.log('Tipo do offer_id:', typeof clickData.offer_id);
       console.log('Comprimento do offer_id:', clickData.offer_id.length);
       
-      // Inserir o registro com dados mínimos
+      // Inserir o registro com dados completos
       console.log('=== EXECUTANDO INSERÇÃO ===');
       const { data, error } = await supabase
         .from('catalog_offer_click')
