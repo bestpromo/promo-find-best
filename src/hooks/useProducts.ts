@@ -1,37 +1,7 @@
-
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-
-// Define a type for our products view
-export type ProductView = {
-  offer_id: string;
-  title: string;
-  url_slug: string;
-  deep_link_url: string;
-  brand_name: string;
-  advertiser_name: string;
-  store_name: string;
-  image_url: string;
-  sale_price: number | null;
-  promotional_price: number | null;
-  // Adding missing properties for compatibility
-  id: string;
-  nome: string;
-  description: string;
-  url: string;
-  photo: string;
-  price: number | null;
-  loja_nome: string;
-  category: string;
-};
-
-export interface ProductsResponse {
-  products: ProductView[];
-  totalCount: number;
-  hasMore: boolean;
-  availableBrands: string[];
-  availableStores: string[];
-}
+import type { ProductView, ProductsResponse, ProductFilters } from "@/types/product";
+import { createDataQuery, createCountQuery, createFiltersQuery } from "@/utils/productQueries";
+import { transformProductData, extractUniqueFilters } from "@/utils/productTransformers";
 
 export const useProducts = (
   searchQuery: string, 
@@ -48,98 +18,20 @@ export const useProducts = (
       try {
         console.log('Fetching products with params:', { searchQuery, sortBy, page, pageSize, brandFilter, priceRange, storeFilter });
 
-        // Create a base query for filtering
-        const createBaseQuery = () => {
-          let query = supabase.from('offer_search').select('*');
-          
-          // Apply search filter
-          if (searchQuery) {
-            const searchTerms = searchQuery.trim().split(/\s+/);
-            if (searchTerms.length > 0) {
-              // Use individual ilike conditions combined with or
-              const searchConditions = searchTerms.map(term => `title.ilike.%${term}%`).join(',');
-              query = query.or(searchConditions);
-            }
-          }
-
-          // Apply filters
-          if (brandFilter && brandFilter.length > 0) {
-            query = query.in('brand_name', brandFilter);
-          }
-
-          if (storeFilter && storeFilter.length > 0) {
-            query = query.in('store_name', storeFilter);
-          }
-
-          if (priceRange && (priceRange.min > 0 || priceRange.max < 1000)) {
-            query = query.gte('sale_price', priceRange.min).lte('sale_price', priceRange.max);
-          }
-
-          return query;
+        const filters: ProductFilters = {
+          searchQuery,
+          sortBy,
+          page,
+          pageSize,
+          brandFilter,
+          priceRange,
+          storeFilter
         };
 
-        // Data query with pagination and sorting
-        let dataQuery = createBaseQuery();
-        
-        // Apply sorting
-        switch (sortBy) {
-          case 'price-desc':
-            dataQuery = dataQuery.order('sale_price', { ascending: false });
-            break;
-          case 'price-asc':
-            dataQuery = dataQuery.order('sale_price', { ascending: true });
-            break;
-          case 'nome-desc':
-            dataQuery = dataQuery.order('title', { ascending: false });
-            break;
-          case 'nome-asc':
-          default:
-            dataQuery = dataQuery.order('title', { ascending: true });
-            break;
-        }
-
-        // Apply pagination
-        const from = (page - 1) * pageSize;
-        const to = from + pageSize - 1;
-        dataQuery = dataQuery.range(from, to);
-
-        // Count query - fix the syntax by using select with count option only
-        let countQuery = supabase.from('offer_search').select('*', { count: 'exact', head: true });
-        
-        // Apply the same filters to count query
-        if (searchQuery) {
-          const searchTerms = searchQuery.trim().split(/\s+/);
-          if (searchTerms.length > 0) {
-            const searchConditions = searchTerms.map(term => `title.ilike.%${term}%`).join(',');
-            countQuery = countQuery.or(searchConditions);
-          }
-        }
-
-        if (brandFilter && brandFilter.length > 0) {
-          countQuery = countQuery.in('brand_name', brandFilter);
-        }
-
-        if (storeFilter && storeFilter.length > 0) {
-          countQuery = countQuery.in('store_name', storeFilter);
-        }
-
-        if (priceRange && (priceRange.min > 0 || priceRange.max < 1000)) {
-          countQuery = countQuery.gte('sale_price', priceRange.min).lte('sale_price', priceRange.max);
-        }
-
-        // For filters, we need to get all available brands and stores from the filtered dataset
-        // Create separate queries for brands and stores that match the search criteria
-        let filtersQuery = supabase.from('offer_search').select('brand_name, store_name');
-        
-        // Only apply search filter to filters query, not brand/store/price filters
-        // This ensures we show all available options for the current search
-        if (searchQuery) {
-          const searchTerms = searchQuery.trim().split(/\s+/);
-          if (searchTerms.length > 0) {
-            const searchConditions = searchTerms.map(term => `title.ilike.%${term}%`).join(',');
-            filtersQuery = filtersQuery.or(searchConditions);
-          }
-        }
+        // Create queries
+        const dataQuery = createDataQuery(filters);
+        const countQuery = createCountQuery(filters);
+        const filtersQuery = createFiltersQuery(filters);
 
         // Execute queries
         console.log('Executing queries...');
@@ -170,39 +62,14 @@ export const useProducts = (
 
         console.log('Query results:', { dataLength: data?.length, count, filtersDataLength: filtersData?.length });
 
-        // Transform the data to match our ProductView interface
-        const products: ProductView[] = (data || []).map((item: any) => ({
-          offer_id: item.offer_id || Math.random().toString(),
-          title: item.title || 'Unnamed Product',
-          url_slug: item.url_slug || '',
-          deep_link_url: item.deep_link_url || '',
-          brand_name: item.brand_name || 'Unknown Store',
-          advertiser_name: item.advertiser_name || '',
-          store_name: item.store_name || '',
-          image_url: item.image_url || '/placeholder.svg',
-          sale_price: parseFloat(item.sale_price) || null,
-          promotional_price: parseFloat(item.promotional_price) || null,
-          // Compatibility properties
-          id: item.offer_id || Math.random().toString(),
-          nome: item.title || 'Unnamed Product',
-          description: `Product from ${item.brand_name || 'Unknown'}`,
-          url: item.deep_link_url || '',
-          photo: item.image_url || '/placeholder.svg',
-          price: parseFloat(item.sale_price) || null,
-          loja_nome: item.store_name || item.brand_name || 'Unknown Store',
-          category: item.brand_name || 'Uncategorized'
-        }));
+        // Transform the data
+        const products: ProductView[] = (data || []).map(transformProductData);
 
-        // Extract unique brands and stores from the filters data
-        const availableBrands = [...new Set(filtersData?.map(product => product.brand_name))]
-          .filter(brand => brand && brand !== 'Unknown Store')
-          .sort();
-
-        const availableStores = [...new Set(filtersData?.map(product => product.store_name))]
-          .filter(store => store && store.trim() !== '')
-          .sort();
+        // Extract unique brands and stores
+        const { availableBrands, availableStores } = extractUniqueFilters(filtersData);
 
         const totalCount = count || 0;
+        const from = (page - 1) * pageSize;
         const hasMore = (from + products.length) < totalCount;
 
         console.log('Final results:', { 
@@ -240,4 +107,5 @@ export const useProducts = (
   });
 };
 
-// Remove the applyFilters function as filtering is now done server-side
+// Export types for external use
+export type { ProductView, ProductsResponse } from "@/types/product";
