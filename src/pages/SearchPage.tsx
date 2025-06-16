@@ -1,4 +1,3 @@
-
 import { SearchBar } from "@/components/SearchBar";
 import { ProductCard } from "@/components/ProductCard";
 import { SearchControls } from "@/components/SearchControls";
@@ -11,7 +10,7 @@ import { useProducts } from "@/hooks/useProducts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
-const PRODUCTS_PER_PAGE = 50;
+const PRODUCTS_PER_PAGE = 100;
 
 const SearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
