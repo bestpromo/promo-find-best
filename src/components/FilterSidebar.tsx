@@ -37,19 +37,6 @@ export const FilterSidebar = ({
   const [localSelectedStores, setLocalSelectedStores] = useState<string[]>(selectedStores);
   const [localPriceRange, setLocalPriceRange] = useState([priceRange.min, priceRange.max]);
 
-  // Add debug logs for stores
-  useEffect(() => {
-    console.log('=== FILTER SIDEBAR DEBUG ===');
-    console.log('availableStores:', availableStores);
-    console.log('availableStores length:', availableStores.length);
-    console.log('allProducts sample (first 3):', allProducts.slice(0, 3).map(p => ({
-      title: p.title,
-      store_name: p.store_name,
-      brand_name: p.brand_name
-    })));
-    console.log('Unique store_names from products:', [...new Set(allProducts.map(p => p.store_name))]);
-  }, [availableStores, allProducts]);
-
   // Sync with parent state
   useEffect(() => {
     setLocalSelectedBrands(selectedBrands);
@@ -66,7 +53,6 @@ export const FilterSidebar = ({
   // Reset filters when search query changes
   useEffect(() => {
     if (searchQuery !== undefined) {
-      console.log('FilterSidebar: Search query changed, resetting filters');
       setLocalSelectedBrands([]);
       setLocalSelectedStores([]);
       setLocalPriceRange([0, 1000]);
@@ -91,9 +77,6 @@ export const FilterSidebar = ({
 
       // If some brands were removed, update the selection
       if (validSelectedBrands.length !== localSelectedBrands.length) {
-        console.log('Cleaning up selected brands based on store selection');
-        console.log('Previous selected brands:', localSelectedBrands);
-        console.log('Valid selected brands:', validSelectedBrands);
         setLocalSelectedBrands(validSelectedBrands);
         onBrandChange(validSelectedBrands);
       }
@@ -101,30 +84,18 @@ export const FilterSidebar = ({
   }, [localSelectedStores, allProducts]);
 
   const handleBrandToggle = (brand: string) => {
-    console.log('=== BRAND TOGGLE ===');
-    console.log('Toggling brand:', brand);
-    console.log('Current selected brands:', localSelectedBrands);
-    
     const newSelectedBrands = localSelectedBrands.includes(brand)
       ? localSelectedBrands.filter(b => b !== brand)
       : [...localSelectedBrands, brand];
-    
-    console.log('New selected brands:', newSelectedBrands);
     
     setLocalSelectedBrands(newSelectedBrands);
     onBrandChange(newSelectedBrands);
   };
 
   const handleStoreToggle = (store: string) => {
-    console.log('=== STORE TOGGLE ===');
-    console.log('Toggling store:', store);
-    console.log('Current selected stores:', localSelectedStores);
-    
     const newSelectedStores = localSelectedStores.includes(store)
       ? localSelectedStores.filter(s => s !== store)
       : [...localSelectedStores, store];
-    
-    console.log('New selected stores:', newSelectedStores);
     
     setLocalSelectedStores(newSelectedStores);
     onStoreChange(newSelectedStores);
@@ -136,7 +107,6 @@ export const FilterSidebar = ({
   };
 
   const handleClearFilters = () => {
-    console.log('Clearing all filters');
     setLocalSelectedBrands([]);
     setLocalSelectedStores([]);
     setLocalPriceRange([0, 1000]);

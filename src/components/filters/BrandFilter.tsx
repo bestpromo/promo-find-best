@@ -31,11 +31,6 @@ export const BrandFilter = ({
         .filter(brand => brand && brand !== 'Unknown Store')
     )].sort();
     
-    console.log('=== BRAND FILTER STORE DEPENDENCY ===');
-    console.log('Selected stores:', selectedStores);
-    console.log('All available brands:', availableBrands);
-    console.log('Brands in selected stores:', brandsInSelectedStores);
-    
     return brandsInSelectedStores;
   };
 

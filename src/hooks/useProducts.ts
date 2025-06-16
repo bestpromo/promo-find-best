@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -49,16 +48,12 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
           }
         }
 
-        console.log('Executing query with search:', searchQuery);
-
         const { data, error } = await query;
 
         if (error) {
           console.error("Error fetching from offer_search:", error);
           return { allProducts: [], availableBrands: [], availableStores: [] };
         }
-
-        console.log('Raw data count from offer_search:', data?.length || 0);
 
         // Transform the data to match our ProductView interface
         const allProducts: ProductView[] = (data || []).map((item: any) => ({
@@ -93,10 +88,6 @@ export const useProducts = (searchQuery: string, sortBy: string, brandFilter?: s
           .filter(store => store && store.trim() !== '')
           .sort();
 
-        console.log('All available brands:', availableBrands);
-        console.log('All available stores:', availableStores);
-        console.log('Total products fetched:', allProducts.length);
-
         // Return raw data, filtering will be done in the component
         return { allProducts, availableBrands, availableStores };
 
@@ -121,48 +112,24 @@ export const applyFilters = (
 
   // Apply brand filter
   if (brandFilter && brandFilter.length > 0) {
-    console.log('=== APPLYING BRAND FILTER ===');
-    console.log('Selected brands:', brandFilter);
-    
     filteredProducts = filteredProducts.filter(product => {
-      const isIncluded = brandFilter.includes(product.brand_name);
-      console.log(`Product: ${product.title}, Brand: ${product.brand_name}, Included: ${isIncluded}`);
-      return isIncluded;
+      return brandFilter.includes(product.brand_name);
     });
-    
-    console.log(`Brand filter: ${allProducts.length} -> ${filteredProducts.length} products`);
   }
 
   // Apply store filter
   if (storeFilter && storeFilter.length > 0) {
-    console.log('=== APPLYING STORE FILTER ===');
-    console.log('Selected stores:', storeFilter);
-    
-    const beforeStoreFilter = filteredProducts.length;
     filteredProducts = filteredProducts.filter(product => {
-      const isIncluded = storeFilter.includes(product.store_name);
-      console.log(`Product: ${product.title}, Store: ${product.store_name}, Included: ${isIncluded}`);
-      return isIncluded;
+      return storeFilter.includes(product.store_name);
     });
-    
-    console.log(`Store filter: ${beforeStoreFilter} -> ${filteredProducts.length} products`);
-    
-    // Show count by store for verification
-    const storeCounts = filteredProducts.reduce((acc, p) => {
-      acc[p.store_name] = (acc[p.store_name] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    console.log('Products by selected stores:', storeCounts);
   }
 
   // Apply price range filter
   if (priceRange && (priceRange.min > 0 || priceRange.max < 1000)) {
-    const beforePriceFilter = filteredProducts.length;
     filteredProducts = filteredProducts.filter(product => {
       const price = product.sale_price || 0;
       return price >= priceRange.min && price <= priceRange.max;
     });
-    console.log(`Price filter: ${beforePriceFilter} -> ${filteredProducts.length} products`);
   }
 
   return filteredProducts;

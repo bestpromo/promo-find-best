@@ -15,10 +15,6 @@ export const StoreFilter = ({
   allProducts,
   onStoreToggle
 }: StoreFilterProps) => {
-  console.log('=== STORE FILTER DEBUG ===');
-  console.log('availableStores:', availableStores);
-  console.log('availableStores length:', availableStores.length);
-
   // Calculate product count for each store (independent of other filters)
   const getStoreProductCount = (store: string) => {
     const filteredProducts = allProducts.filter(product => product.store_name === store);
@@ -39,9 +35,6 @@ export const StoreFilter = ({
   };
 
   const orderedStores = getOrderedStores();
-
-  console.log('orderedStores:', orderedStores);
-  console.log('orderedStores length:', orderedStores.length);
 
   return (
     <FilterSection 
@@ -70,7 +63,6 @@ export const StoreFilter = ({
       ) : (
         <div>
           <p className="text-sm text-gray-500 p-2">Nenhum parceiro encontrado</p>
-          <p className="text-xs text-red-500 p-2">Debug: availableStores = {availableStores.length}</p>
         </div>
       )}
     </FilterSection>
