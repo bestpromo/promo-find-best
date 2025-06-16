@@ -43,9 +43,8 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
   
   // Extract the correct properties based on product type
   const name = isSupabaseProduct ? product.title || 'Unnamed Product' : product.name;
-  const price = isSupabaseProduct ? 
-    (product.sale_price || product.promotional_price || 0).toFixed(2) : 
-    product.price.toFixed(2);
+  const originalPrice = isSupabaseProduct ? product.price : product.price;
+  const promotionalPrice = isSupabaseProduct ? (product.sale_price || product.promotional_price) : null;
   const category = isSupabaseProduct ? 
     product.brand_name || 'Uncategorized' : 
     product.category;
@@ -55,6 +54,31 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
   const productUrl = isSupabaseProduct ? 
     product.deep_link_url : 
     product.url;
+
+  // Price rendering logic based on business rules
+  const renderPrice = () => {
+    if (promotionalPrice && promotionalPrice !== originalPrice) {
+      // Rule 1: When we have promotional_price, show both prices
+      return (
+        <div className="mb-2">
+          <p className="text-gray-500 line-through" style={{ fontSize: '12px', fontWeight: 'normal' }}>
+            R$ {originalPrice?.toFixed(2)}
+          </p>
+          <p className="text-orange-500 font-bold" style={{ fontSize: '28px' }}>
+            R$ {promotionalPrice.toFixed(2)}
+          </p>
+        </div>
+      );
+    } else {
+      // Rule 2: When we only have price, show it as promotional_price style
+      const displayPrice = promotionalPrice || originalPrice || 0;
+      return (
+        <p className="text-orange-500 font-bold mb-2" style={{ fontSize: '28px' }}>
+          R$ {displayPrice.toFixed(2)}
+        </p>
+      );
+    }
+  };
 
   return (
     <Card className={`overflow-hidden hover:shadow-lg transition-shadow duration-300 ${
@@ -72,7 +96,7 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
       </CardHeader>
       <CardContent className={`p-4 ${displayMode === 'list' ? 'flex-1' : ''} flex flex-col`}>
         <h3 className="font-semibold mb-2 line-clamp-2 flex-grow" style={{ fontSize: '16px' }}>{name}</h3>
-        <p className="text-orange-500 font-bold mb-2" style={{ fontSize: '28px' }}>R$ {price}</p>
+        {renderPrice()}
         <button 
           onClick={handleBrandClick}
           className="text-sm text-gray-500 hover:text-blue-600 hover:underline mb-4 text-left cursor-pointer"
