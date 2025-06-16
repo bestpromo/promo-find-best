@@ -15,7 +15,7 @@ const RedirectPage = () => {
   const offerId = searchParams.get("offer_id");
   const deepLinkUrl = searchParams.get("deep_link_url");
   const title = searchParams.get("title");
-  const brandName = searchParams.get("brand_name");
+  const storeName = searchParams.get("store_name");
   const price = searchParams.get("price");
 
   const handleRedirect = () => {
@@ -70,7 +70,7 @@ const RedirectPage = () => {
       offerId,
       deepLinkUrl,
       title,
-      brandName,
+      storeName,
       price
     });
 
@@ -109,7 +109,7 @@ const RedirectPage = () => {
         <RedirectInfo 
           countdown={countdown}
           title={title}
-          brandName={brandName}
+          brandName={storeName}
           price={price}
         />
 

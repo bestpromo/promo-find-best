@@ -46,7 +46,7 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
         offer_id: product.offer_id,
         deep_link_url: product.deep_link_url || '',
         title: product.title || '',
-        brand_name: product.brand_name || '',
+        store_name: product.store_name || '',
         price: (product.sale_price || product.promotional_price || 0).toString()
       });
       
