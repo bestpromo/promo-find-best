@@ -22,19 +22,9 @@ export const BrandFilter = ({
   isLoading = false,
   searchQuery
 }: BrandFilterProps) => {
-  // Filter brands based on selected stores
-  const getFilteredBrands = () => {
-    if (selectedStores.length === 0) {
-      return availableBrands;
-    }
-    
-    // If stores are selected, we need to filter brands accordingly
-    // For now, return all available brands as we don't have the cross-reference data
-    // This could be enhanced with a more sophisticated filtering mechanism
-    return availableBrands;
-  };
-
-  const filteredBrands = getFilteredBrands();
+  // The availableBrands now comes filtered from the backend based on selected stores
+  // So we can use them directly without additional filtering
+  const filteredBrands = availableBrands;
 
   // For now, show a generic count since we don't have the full dataset
   const getBrandProductCount = (brand: string) => {

@@ -62,7 +62,7 @@ export const useProducts = (
         console.log('Getting real total count for search term...');
         let totalCountQuery = supabase
           .from('offer_search')
-          .select('*', { count: 'exact', head: true });
+          .select('offer_id', { count: 'exact', head: true });
         
         totalCountQuery = applySearchFilter(totalCountQuery);
         const { count: realTotalCount, error: countError } = await totalCountQuery;
@@ -73,17 +73,23 @@ export const useProducts = (
 
         console.log('Real total count for search term:', realTotalCount);
 
-        // 2. Get available filters based on search term only (all products matching search)
-        console.log('Getting available filters for all search results...');
+        // 2. Get available filters based on search term and selected stores
+        console.log('Getting available filters...');
         let filtersQuery = supabase.from('offer_search').select('brand_name, store_name, sale_price').limit(5000);
         filtersQuery = applySearchFilter(filtersQuery);
+        
+        // If stores are selected, filter brands by those stores
+        if (storeFilter && storeFilter.length > 0) {
+          filtersQuery = filtersQuery.in('store_name', storeFilter);
+        }
 
         const filtersResult = await filtersQuery;
         const { availableBrands, availableStores } = extractUniqueFilters(filtersResult.data || []);
 
-        console.log('Available filters from all search results:', {
+        console.log('Available filters:', {
           brands: availableBrands.length,
-          stores: availableStores.length
+          stores: availableStores.length,
+          filteredByStores: storeFilter && storeFilter.length > 0
         });
 
         // 3. Get data with all filters applied (for current page)

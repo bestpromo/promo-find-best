@@ -61,29 +61,24 @@ export const FilterSidebar = ({
     }
   }, [searchQuery]);
 
-  // Clean up selected brands when stores change
+  // Clean up selected brands when stores change and brands are no longer available
   useEffect(() => {
-    if (localSelectedStores.length > 0) {
-      // Get brands available in selected stores
-      const brandsInSelectedStores = [...new Set(
-        allProducts
-          .filter(product => localSelectedStores.includes(product.store_name))
-          .map(product => product.brand_name)
-          .filter(brand => brand && brand !== 'Unknown Store')
-      )];
+    // Filter selected brands to only include those available in the current brand list
+    const validSelectedBrands = localSelectedBrands.filter(brand => 
+      availableBrands.includes(brand)
+    );
 
-      // Filter selected brands to only include those available in selected stores
-      const validSelectedBrands = localSelectedBrands.filter(brand => 
-        brandsInSelectedStores.includes(brand)
-      );
-
-      // If some brands were removed, update the selection
-      if (validSelectedBrands.length !== localSelectedBrands.length) {
-        setLocalSelectedBrands(validSelectedBrands);
-        onBrandChange(validSelectedBrands);
-      }
+    // If some brands were removed, update the selection
+    if (validSelectedBrands.length !== localSelectedBrands.length) {
+      console.log('Cleaning up invalid brands:', {
+        before: localSelectedBrands,
+        after: validSelectedBrands,
+        availableBrands
+      });
+      setLocalSelectedBrands(validSelectedBrands);
+      onBrandChange(validSelectedBrands);
     }
-  }, [localSelectedStores, allProducts]);
+  }, [availableBrands, localSelectedBrands]);
 
   const handleBrandToggle = (brand: string) => {
     const newSelectedBrands = localSelectedBrands.includes(brand)
