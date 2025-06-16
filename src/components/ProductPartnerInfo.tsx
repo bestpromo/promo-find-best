@@ -5,13 +5,13 @@ interface ProductPartnerInfoProps {
 
 export const ProductPartnerInfo = ({ storeName }: ProductPartnerInfoProps) => {
   return (
-    <div className="flex items-center justify-center gap-1 mt-2">
+    <div className="flex items-start justify-center gap-1 mt-2">
       <span className="text-xs font-bold text-gray-600">
         Parceiro: {storeName}
       </span>
       <svg 
         aria-label="Verified" 
-        className="h-3 w-3" 
+        className="h-3 w-3 flex-shrink-0 mt-0.5" 
         fill="rgb(0, 149, 246)" 
         height="18" 
         role="img" 
