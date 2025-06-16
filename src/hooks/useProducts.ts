@@ -55,10 +55,9 @@ export const useProducts = (
           if (searchQuery) {
             const searchTerms = searchQuery.trim().split(/\s+/);
             if (searchTerms.length > 0) {
-              const searchFilter = searchTerms.map(term => 
-                `title.ilike.%${term}%`
-              ).join(',');
-              query = query.or(searchFilter);
+              // Use individual ilike conditions combined with or
+              const searchConditions = searchTerms.map(term => `title.ilike.%${term}%`).join(',');
+              query = query.or(searchConditions);
             }
           }
 
@@ -104,22 +103,19 @@ export const useProducts = (
         dataQuery = dataQuery.range(from, to);
 
         // Count query - same filters but for count only
-        let countQuery = createBaseQuery().select('offer_id', { count: 'exact', head: true });
+        let countQuery = createBaseQuery().select('*', { count: 'exact', head: true });
 
         // For filters, we need to get all available brands and stores from the filtered dataset
         // Create separate queries for brands and stores that match the search criteria
-        let filtersQuery = createBaseQuery().select('brand_name, store_name');
+        let filtersQuery = supabase.from('offer_search').select('brand_name, store_name');
         
         // Only apply search filter to filters query, not brand/store/price filters
         // This ensures we show all available options for the current search
         if (searchQuery) {
-          filtersQuery = supabase.from('offer_search').select('brand_name, store_name');
           const searchTerms = searchQuery.trim().split(/\s+/);
           if (searchTerms.length > 0) {
-            const searchFilter = searchTerms.map(term => 
-              `title.ilike.%${term}%`
-            ).join(',');
-            filtersQuery = filtersQuery.or(searchFilter);
+            const searchConditions = searchTerms.map(term => `title.ilike.%${term}%`).join(',');
+            filtersQuery = filtersQuery.or(searchConditions);
           }
         }
 
