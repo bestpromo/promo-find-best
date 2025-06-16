@@ -9,6 +9,26 @@ export const useClickRegistration = () => {
   const [registrationStatus, setRegistrationStatus] = useState<RegistrationStatus>('pending');
   const registeredOffers = useRef<Set<string>>(new Set());
 
+  // Função para gerar um session ID único
+  const generateSessionId = (): string => {
+    return 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  };
+
+  // Função para obter ou criar um session ID
+  const getOrCreateSessionId = (): string => {
+    let sessionId = localStorage.getItem('bp_session_id');
+    
+    if (!sessionId) {
+      sessionId = generateSessionId();
+      localStorage.setItem('bp_session_id', sessionId);
+      console.log('Novo session ID criado:', sessionId);
+    } else {
+      console.log('Session ID existente:', sessionId);
+    }
+    
+    return sessionId;
+  };
+
   // Função para obter o IP do usuário
   const getUserIP = async (): Promise<string | null> => {
     try {
@@ -63,10 +83,12 @@ export const useClickRegistration = () => {
 
       // Obter informações do usuário
       console.log('=== COLETANDO INFORMAÇÕES DO USUÁRIO ===');
+      const sessionId = getOrCreateSessionId();
       const userIP = await getUserIP();
       const userAgent = navigator.userAgent;
       const referrer = document.referrer || window.location.origin;
       
+      console.log('Session ID:', sessionId);
       console.log('IP do usuário:', userIP);
       console.log('User Agent:', userAgent);
       console.log('Referrer:', referrer);
@@ -74,6 +96,7 @@ export const useClickRegistration = () => {
       // Preparar dados completos para inserção
       const clickData = {
         offer_id: offerId.toString().trim(),
+        session_id: sessionId,
         ip_address: userIP,
         user_agent: userAgent,
         referrer: referrer
@@ -129,6 +152,7 @@ export const useClickRegistration = () => {
   return {
     isRegistering,
     registrationStatus,
-    registerClick
+    registerClick,
+    getSessionId: getOrCreateSessionId
   };
 };
