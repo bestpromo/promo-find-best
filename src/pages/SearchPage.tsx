@@ -1,3 +1,4 @@
+
 import { SearchBar } from "@/components/SearchBar";
 import { ProductCard } from "@/components/ProductCard";
 import { SearchControls } from "@/components/SearchControls";
@@ -26,8 +27,10 @@ const SearchPage = () => {
   // Apply filters client-side
   const filteredProducts = applyFilters(allProducts, brandFilter, priceRange);
 
-  // Reset filters when search query changes (for brand navigation)
+  // Reset filters when search query changes
   useEffect(() => {
+    console.log('Search query changed to:', query);
+    console.log('Clearing all filters');
     setBrandFilter([]);
     setPriceRange({ min: 0, max: 1000 });
     setVisibleProducts(PRODUCTS_PER_PAGE);

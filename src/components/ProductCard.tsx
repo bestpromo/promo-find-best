@@ -71,8 +71,8 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
         />
       </CardHeader>
       <CardContent className={`p-4 ${displayMode === 'list' ? 'flex-1' : ''} flex flex-col`}>
-        <h3 className="font-semibold text-lg mb-2 line-clamp-2 flex-grow">{name}</h3>
-        <p className="text-orange-500 font-bold mb-2">R$ {price}</p>
+        <h3 className="font-semibold mb-2 line-clamp-2 flex-grow" style={{ fontSize: '16px' }}>{name}</h3>
+        <p className="text-orange-500 font-bold mb-2" style={{ fontSize: '28px' }}>R$ {price}</p>
         <button 
           onClick={handleBrandClick}
           className="text-sm text-gray-500 hover:text-blue-600 hover:underline mb-4 text-left cursor-pointer"
