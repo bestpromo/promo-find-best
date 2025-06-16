@@ -42,7 +42,7 @@ export const createDataQuery = (filters: ProductFilters) => {
   
   console.log('Creating data query with sort:', sortBy, 'page:', page, 'pageSize:', pageSize);
   
-  // Apply sorting
+  // Apply sorting with correct Supabase syntax
   switch (sortBy) {
     case 'price-desc':
       dataQuery = dataQuery.order('sale_price', { ascending: false });
