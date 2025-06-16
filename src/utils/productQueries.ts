@@ -71,10 +71,28 @@ export const createDataQuery = (filters: ProductFilters) => {
 // Query to get the real total count
 export const createCountQuery = (filters: ProductFilters) => {
   console.log('Creating count query for accurate total');
-  let countQuery = createBaseQuery(filters);
+  const { searchQuery, brandFilter, storeFilter, priceRange } = filters;
+  let countQuery = supabase.from('offer_search').select('*', { count: 'exact', head: true });
   
-  // Use the correct Supabase syntax for counting - select with count option and head
-  return countQuery.select('*', { count: 'exact', head: true });
+  // Apply the same filters as the base query
+  if (searchQuery && searchQuery.trim()) {
+    const searchTerm = searchQuery.trim().toLowerCase();
+    countQuery = countQuery.ilike('title', `%${searchTerm}%`);
+  }
+
+  if (brandFilter && brandFilter.length > 0) {
+    countQuery = countQuery.in('brand_name', brandFilter);
+  }
+
+  if (storeFilter && storeFilter.length > 0) {
+    countQuery = countQuery.in('store_name', storeFilter);
+  }
+
+  if (priceRange && (priceRange.min > 0 || priceRange.max < 1000)) {
+    countQuery = countQuery.gte('sale_price', priceRange.min).lte('sale_price', priceRange.max);
+  }
+  
+  return countQuery;
 };
 
 // Test query to check if we can get any data at all
@@ -92,7 +110,7 @@ export const createFiltersQuery = (filters: ProductFilters) => {
   
   console.log('Creating filters query for search:', searchQuery);
   
-  let baseQuery = supabase.from('offer_search');
+  let baseQuery = supabase.from('offer_search').select('brand_name, store_name');
   
   // Apply search filter if exists
   if (searchQuery && searchQuery.trim()) {
@@ -100,6 +118,5 @@ export const createFiltersQuery = (filters: ProductFilters) => {
     baseQuery = baseQuery.ilike('title', `%${searchTerm}%`);
   }
   
-  // Select only brand and store names without limit to get all available options
-  return baseQuery.select('brand_name, store_name');
+  return baseQuery;
 };
