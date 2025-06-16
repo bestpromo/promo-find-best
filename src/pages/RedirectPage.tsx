@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +16,14 @@ const RedirectPage = () => {
   const price = searchParams.get("price");
 
   useEffect(() => {
+    console.log('=== DEBUGGING URL PARAMS ===');
+    console.log('URL completa:', window.location.href);
+    console.log('Todos os parâmetros:', Object.fromEntries(searchParams.entries()));
+    console.log('offer_id extraído:', offerId);
+    console.log('deepLinkUrl extraído:', deepLinkUrl);
+
     if (!deepLinkUrl || !offerId) {
+      console.log('Parâmetros obrigatórios faltando - redirecionando para home');
       navigate("/");
       return;
     }
@@ -48,7 +54,14 @@ const RedirectPage = () => {
       console.log('=== INÍCIO DO REGISTRO DE CLIQUE ===');
       console.log('offer_id recebido:', offerId);
       console.log('Tipo do offer_id:', typeof offerId);
+      console.log('offer_id é válido?', offerId && offerId.trim() !== '');
       
+      // Verificar se offer_id é válido
+      if (!offerId || offerId.trim() === '') {
+        console.error('ERRO: offer_id está vazio ou inválido');
+        return;
+      }
+
       // Verificar conexão com Supabase
       console.log('Testando conexão com Supabase...');
       const { data: testData, error: testError } = await supabase
@@ -60,25 +73,43 @@ const RedirectPage = () => {
         return;
       }
       
-      console.log('Conexão com Supabase OK');
+      console.log('Conexão com Supabase OK. Contagem atual de registros:', testData);
       
-      // Preparar dados para inserção
+      // Verificar se a tabela existe e tem a estrutura esperada
+      console.log('Verificando estrutura da tabela...');
+      const { data: sampleData, error: sampleError } = await supabase
+        .from('catalog_offer_click')
+        .select('*')
+        .limit(1);
+      
+      if (sampleError) {
+        console.error('Erro ao verificar estrutura da tabela:', sampleError);
+      } else {
+        console.log('Estrutura da tabela OK. Amostra:', sampleData);
+      }
+      
+      // Preparar dados para inserção com conversão explícita do offer_id
       const clickData = {
-        offer_id: offerId,
+        offer_id: offerId.toString().trim(), // Garantir que seja string limpa
         clicked_at: new Date().toISOString(),
-        user_ip: null, // Explicitamente null
+        user_ip: null,
         user_agent: navigator.userAgent,
         referrer_url: window.location.origin
       };
       
       console.log('Dados preparados para inserção:', clickData);
+      console.log('JSON dos dados:', JSON.stringify(clickData, null, 2));
       
       // Tentar inserir o registro
       console.log('Tentando inserir registro...');
-      const { data, error } = await supabase
+      const insertPromise = supabase
         .from('catalog_offer_click')
         .insert([clickData])
         .select();
+      
+      console.log('Promise criada, aguardando resultado...');
+      const { data, error } = await insertPromise;
+      console.log('Resultado recebido do Supabase');
 
       if (error) {
         console.error('=== ERRO AO REGISTRAR CLIQUE ===');
@@ -87,15 +118,44 @@ const RedirectPage = () => {
         console.error('Detalhes completos:', error);
         console.error('Hint:', error.hint);
         console.error('Details:', error.details);
+        
+        // Tentar inserção alternativa sem select
+        console.log('Tentando inserção sem select...');
+        const { error: insertError } = await supabase
+          .from('catalog_offer_click')
+          .insert([clickData]);
+        
+        if (insertError) {
+          console.error('Erro na inserção alternativa:', insertError);
+        } else {
+          console.log('Inserção alternativa realizada com sucesso!');
+        }
       } else {
         console.log('=== CLIQUE REGISTRADO COM SUCESSO ===');
         console.log('Dados retornados:', data);
         console.log('Número de registros inseridos:', data?.length || 0);
+        
+        // Verificar se realmente foi inserido
+        console.log('Verificando se o registro foi realmente inserido...');
+        const { data: verifyData, error: verifyError } = await supabase
+          .from('catalog_offer_click')
+          .select('*')
+          .eq('offer_id', offerId)
+          .order('clicked_at', { ascending: false })
+          .limit(1);
+        
+        if (verifyError) {
+          console.error('Erro ao verificar inserção:', verifyError);
+        } else {
+          console.log('Verificação da inserção:', verifyData);
+        }
       }
     } catch (error) {
       console.error('=== ERRO DURANTE EXECUÇÃO ===');
       console.error('Erro capturado:', error);
       console.error('Stack trace:', error instanceof Error ? error.stack : 'N/A');
+      console.error('Tipo do erro:', typeof error);
+      console.error('Nome do erro:', error instanceof Error ? error.name : 'N/A');
     }
   };
 
