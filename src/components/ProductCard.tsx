@@ -25,9 +25,26 @@ export const ProductCard = ({ product, displayMode }: ProductCardProps) => {
   const navigate = useNavigate();
 
   const handleBuy = () => {
-    const url = 'deep_link_url' in product ? product.deep_link_url : product.url;
-    if (url) {
-      window.open(url, '_blank', 'noopener,noreferrer');
+    // Determine if we're dealing with a mock product or a Supabase product
+    const isSupabaseProduct = 'offer_id' in product;
+    
+    if (isSupabaseProduct) {
+      // Redirecionar para a página intermediária com os parâmetros necessários
+      const params = new URLSearchParams({
+        offer_id: product.offer_id,
+        deep_link_url: product.deep_link_url || '',
+        title: product.title || '',
+        brand_name: product.brand_name || '',
+        price: (product.sale_price || product.promotional_price || 0).toString()
+      });
+      
+      navigate(`/redirecting?${params.toString()}`);
+    } else {
+      // Para produtos mock, manter comportamento original
+      const url = product.url;
+      if (url) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
     }
   };
 
