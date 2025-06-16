@@ -38,7 +38,7 @@ const SearchPage = () => {
   // Helper function to check if product has image
   const hasValidImage = (product: ProductView) => {
     const isSupabaseProduct = 'offer_id' in product;
-    const imageUrl = isSupabaseProduct ? product.image_url : product.image;
+    const imageUrl = isSupabaseProduct ? product.image_url : (product as any).image;
     
     // Consider image invalid if it's empty, null, undefined, or placeholder
     return imageUrl && 

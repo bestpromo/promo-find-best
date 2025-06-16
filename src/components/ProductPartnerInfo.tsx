@@ -1,5 +1,5 @@
 
-import { CircleCheck } from "lucide-react";
+import { Check } from "lucide-react";
 
 interface ProductPartnerInfoProps {
   storeName: string;
@@ -11,7 +11,7 @@ export const ProductPartnerInfo = ({ storeName }: ProductPartnerInfoProps) => {
       <span className="text-xs font-bold text-gray-600">
         Parceiro: {storeName}
       </span>
-      <CircleCheck className="h-3 w-3 text-green-500 fill-green-500" />
+      <Check className="h-3 w-3 text-green-500" />
     </div>
   );
 };
